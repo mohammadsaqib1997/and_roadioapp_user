@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "944992282412",
+    "firebase_url": "https://radioapp-a8558.firebaseio.com",
+    "project_id": "radioapp-a8558",
+    "storage_bucket": "radioapp-a8558.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:944992282412:android:dfa7703545786ba9",
+        "android_client_info": {
+          "package_name": "com.roadioapp.roadioappuser"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "944992282412-2n8m95tcjat5c5527li2j167jvn193lb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.roadioapp.roadioappuser",
+            "certificate_hash": "3c0434c5d1712f42a3a0e38f2c58455f9e5c9e0b"
+          }
+        },
+        {
+          "client_id": "944992282412-2l948b019kr39u9qg6f07pe00u58hibo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyy7fvuO0LxwuOhL8KDBjteegMaOAShpE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "944992282412-2l948b019kr39u9qg6f07pe00u58hibo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

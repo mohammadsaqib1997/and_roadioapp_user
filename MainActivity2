@@ -1,0 +1,394 @@
+package com.roadioapp.roadioappuser;
+
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.Projection;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+public class MapActivity extends AppCompatActivity implements
+        OnMapReadyCallback, View.OnClickListener, View.OnTouchListener {
+
+    private GoogleMap mMap;
+    MapFragment mapFragment;
+    Marker marker;
+    LatLng karachi;
+    final private int PERM_REQUEST_LOCATION = 100;
+
+    LinearLayout selBike, selCar, selVan, selTruck, activeBtn;
+
+    GPSTracker gps;
+
+    boolean drawerState = false, cameraMove = false, isGPSEnabled = false, serviceStart = false;
+    DrawerLayout drawer_layout;
+
+    private AnimatedVectorDrawable mMenuDrawable;
+    private AnimatedVectorDrawable mBackDrawable;
+
+    ImageView navMenuIcon;
+
+    LinearLayout sendBtn, getARideBtn, selTypeCon, curLocCont, setCurLocBtn;
+    TextView sendBtnText, getARideBtnText;
+
+    private BroadcastReceiver broadcastReceiver;
+    private LocationManager locationManager;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        if(!permissionCheck()){
+            setPermission();
+        }else{
+            startTrackLoc();
+        }
+
+        navMenuIcon = (ImageView) findViewById(R.id.navMenuIcon);
+        navMenuIcon.setOnClickListener(this);
+
+        drawer_layout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer_layout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+
+
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                if (newState == DrawerLayout.STATE_SETTLING){
+                    menuChange();
+                }
+            }
+        });
+
+        sendBtn = (LinearLayout) findViewById(R.id.sendBtn);
+        sendBtnText = (TextView) sendBtn.getChildAt(0);
+        sendBtn.setOnTouchListener(this);
+
+        getARideBtn = (LinearLayout) findViewById(R.id.getARideBtn);
+        getARideBtnText = (TextView) getARideBtn.getChildAt(0);
+        getARideBtn.setOnTouchListener(this);
+
+        selTypeCon = (LinearLayout) findViewById(R.id.selTypeCon);
+        curLocCont = (LinearLayout) findViewById(R.id.curLocCont);
+
+        setCurLocBtn = (LinearLayout) findViewById(R.id.setCurLocBtn);
+        setCurLocBtn.setOnClickListener(this);
+
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(broadcastReceiver == null){
+            broadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.e("LocationUpadte", intent.getExtras().get("Coordinates")+"");
+                    setLocMarker((double)intent.getExtras().get("Lat"), (double)intent.getExtras().get("Lng"));
+                }
+            };
+        }
+        registerReceiver(broadcastReceiver, new IntentFilter("location_update"));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(broadcastReceiver != null){
+            unregisterReceiver(broadcastReceiver);
+        }
+        stopTrackLoc();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+        mMap = googleMap;
+
+        try {
+            boolean success = googleMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.style_json));
+
+            if (!success) {
+                Log.e("MapTag", "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e("MapTag", "Can't find style. Error: ", e);
+        }
+
+        mMap.setMinZoomPreference(10.0f);
+        mMap.setMaxZoomPreference(20.0f);
+
+
+
+        // Add a marker in Sydney and move the camera
+        karachi = new LatLng(25.0004269,66.924279);
+        //marker = mMap.addMarker(new MarkerOptions().position(karachi));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(karachi, 10));
+
+        mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+            @Override
+            public void onCameraMoveStarted(int reason) {
+                cameraMove = true;
+                parcelTypeConAnim();
+            }
+        });
+
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                cameraMove = false;
+                parcelTypeConAnim();
+            }
+        });
+    }
+
+    @Override
+    public void onClick(View v) {
+        int getId = v.getId();
+        switch (getId){
+            case R.id.navMenuIcon:
+                if(drawerState){
+                    drawer_layout.closeDrawer(Gravity.START);
+                }else{
+                    drawer_layout.openDrawer(Gravity.START);
+                }
+                break;
+            case R.id.setCurLocBtn:
+                startTrackLoc();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        int getId = v.getId();
+        switch (getId){
+            case R.id.sendBtn:
+                btnEventEff(event, sendBtn, sendBtnText);
+                break;
+            case R.id.getARideBtn:
+                btnEventEff(event, getARideBtn, getARideBtnText);
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+
+    public void menuChange(){
+        if(drawerState){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                navMenuIcon.setBackgroundResource(R.drawable.ic_back_animatable);
+                AnimatedVectorDrawable anim = (AnimatedVectorDrawable) navMenuIcon.getBackground();
+                anim.start();
+            }
+        }else{
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                navMenuIcon.setBackgroundResource(R.drawable.ic_menu_animatable);
+                AnimatedVectorDrawable anim = (AnimatedVectorDrawable) navMenuIcon.getBackground();
+                anim.start();
+            }
+        }
+        drawerState = !drawerState;
+    }
+
+    public void btnEventEff(MotionEvent event, View v, TextView tv){
+        if(event.getAction() == MotionEvent.ACTION_DOWN){
+            v.setBackgroundResource(R.color.colorFontLight);
+            tv.setTextColor(Color.parseColor("#333333"));
+        }else if(event.getAction() == MotionEvent.ACTION_UP){
+            v.setBackgroundResource(R.color.colorPrimary);
+            tv.setTextColor(Color.parseColor("#ffffff"));
+        }
+    }
+    public void parcelTypeConAnim(){
+        if(cameraMove){
+            curLocCont.animate()
+                    .translationX(curLocCont.getWidth()/2)
+                    .alpha(0.0f)
+                    .setDuration(300);
+            selTypeCon.animate()
+                    .translationY(selTypeCon.getHeight())
+                    .alpha(0.0f)
+                    .setDuration(300);
+        }else{
+            curLocCont.animate()
+                    .translationX(0)
+                    .alpha(1.0f)
+                    .setStartDelay(100)
+                    .setDuration(300);
+            selTypeCon.animate()
+                    .translationY(0)
+                    .alpha(1.0f)
+                    .setStartDelay(100)
+                    .setDuration(300);
+        }
+    }
+
+    public void startTrackLoc() {
+        // getting GPS status
+        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if (isGPSEnabled) {
+            if (!serviceStart) {
+                Intent i = new Intent(getApplicationContext(), GPS_Service.class);
+                startService(i);
+                serviceStart = true;
+            }
+        } else {
+            serviceStart = false;
+            Intent sett_i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            sett_i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(sett_i);
+        }
+    }
+
+    public void stopTrackLoc(){
+        Intent i = new Intent(getApplicationContext(), GPS_Service.class);
+        stopService(i);
+        serviceStart = false;
+    }
+
+    private void setLocMarker(double latitude, double longitude){
+        LatLng curLatLong = new LatLng(latitude, longitude);
+        if(marker == null){
+            marker = mMap.addMarker(new MarkerOptions().position(curLatLong));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curLatLong, 18.0f));
+        }
+        animateMarker(marker, curLatLong, false);
+    }
+
+    public void animateMarker(final Marker marker, final LatLng toPosition,
+                              final boolean hideMarker) {
+        final Handler handler = new Handler();
+        final long start = SystemClock.uptimeMillis();
+        Projection proj = mMap.getProjection();
+        Point startPoint = proj.toScreenLocation(marker.getPosition());
+        final LatLng startLatLng = proj.fromScreenLocation(startPoint);
+        final long duration = 500;
+
+        final Interpolator interpolator = new LinearInterpolator();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                long elapsed = SystemClock.uptimeMillis() - start;
+                float t = interpolator.getInterpolation((float) elapsed
+                        / duration);
+                double lng = t * toPosition.longitude + (1 - t)
+                        * startLatLng.longitude;
+                double lat = t * toPosition.latitude + (1 - t)
+                        * startLatLng.latitude;
+                marker.setPosition(new LatLng(lat, lng));
+
+                if (t < 1.0) {
+                    // Post again 16ms later.
+                    handler.postDelayed(this, 16);
+                } else {
+                    if (hideMarker) {
+                        marker.setVisible(false);
+                    } else {
+                        marker.setVisible(true);
+                    }
+                }
+            }
+        });
+    }
+
+    public boolean permissionCheck(){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            int hasFineLocationPermission = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            int hasCoarseLocationPermission = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (hasFineLocationPermission != PackageManager.PERMISSION_GRANTED || hasCoarseLocationPermission != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void setPermission(){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                    PERM_REQUEST_LOCATION);
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERM_REQUEST_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    startTrackLoc();
+                    Toast.makeText(MapActivity.this, "Location Permission Access", Toast.LENGTH_SHORT)
+                            .show();
+                } else {
+                    setPermission();
+                    Toast.makeText(MapActivity.this, "Location Permission Denied", Toast.LENGTH_SHORT)
+                            .show();
+                }
+
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+}

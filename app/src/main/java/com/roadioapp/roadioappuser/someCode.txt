@@ -1,0 +1,206 @@
+private void showCurrentPlace(final LatLng latLng) {
+        if (mMap == null) {
+            return;
+        }
+
+        if (permissionCheck()) {
+            if(!pickLocation){
+                pickLocation = true;
+                //Log.e("requestIsGoing", "Going");
+                String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="+latLng.latitude+","+latLng.longitude+"&sensor=false&key="+getResources().getString(R.string.google_url_key);
+                StringRequest stringReqData = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String userDataResponse) {
+                        pickLocation = false;
+                        //Log.e("ReqLoc",userDataResponse);
+                        try {
+                            JSONObject rData = new JSONObject(userDataResponse);
+                            String status = rData.getString("status");
+                            JSONArray results = rData.getJSONArray("results");
+                            if(status.equals("OK")){
+                                JSONObject getSingleData = results.getJSONObject(0);
+                                JSONArray addressComponents = getSingleData.getJSONArray("address_components");
+                                JSONObject firstAddName = addressComponents.getJSONObject(0);
+                                String newLoc = firstAddName.getString("long_name");
+                                //curLocLL = new LatLng(curLat, curLng);
+                                pickCurLocation = curLocation;
+                                if(firstCamMov){
+                                    setTVCurLoc(newLoc, curLocLL, true);
+                                    firstCamMov = false;
+                                }else if(!curLocation.equals(newLoc)){
+                                    setTVCurLoc(newLoc, curLocLL, true);
+                                }
+                                curLocation = newLoc;
+                            }else{
+                                Toast.makeText(MapActivity.this, status, Toast.LENGTH_SHORT).show();
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        pickLocation = false;
+                        Log.e("ReqErr", String.valueOf(error));
+                    }
+                });
+                stringReqData.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                geocodingAPIReq.add(stringReqData);
+            }
+        } else {
+            showPermissionErr();
+        }
+    }
+
+    private void showDirection(){
+        resetDirection();
+        if(pickLocMarker != null && desLocMarker != null){
+            showProgressDialog();
+            String origin = (pickLocMarker.getPosition()).latitude+","+(pickLocMarker.getPosition()).longitude;
+            String destination = (desLocMarker.getPosition()).latitude+","+(desLocMarker.getPosition()).longitude;
+            String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin + "&destination=" + destination + "&key=" + getResources().getString(R.string.google_url_key);
+            StringRequest stringReqData = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String userDataResponse) {
+                    hideProgressDialog();
+                    //Log.e("ReqLoc",userDataResponse);
+                    try {
+                        JSONObject rData = new JSONObject(userDataResponse);
+                        String status = rData.getString("status");
+
+                        if(status.equals("OK")){
+                            JSONArray routes = rData.getJSONArray("routes");
+                            JSONObject subRoutes = routes.getJSONObject(0);
+                            JSONObject overview_polyline = subRoutes.getJSONObject("overview_polyline");
+                            List<LatLng> points = decodePolyLine(overview_polyline.getString("points"));
+                            PolylineOptions polylineOptions = new PolylineOptions().
+                                    geodesic(true).
+                                    color(Color.RED).
+                                    width(10).zIndex(999999999.0f);
+
+                            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                            for (int i = 0; i < points.size(); i++){
+                                builder.include(points.get(i));
+                                polylineOptions.add(points.get(i));
+                            }
+                            PickDesBounds = builder.build();
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(PickDesBounds, getHeightWidth("w"), 500, 100));
+
+                            polylinePaths.add(mMap.addPolyline(polylineOptions));
+
+                        }else{
+                            Toast.makeText(MapActivity.this, status, Toast.LENGTH_SHORT).show();
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    hideProgressDialog();
+                    Log.e("ReqErr", String.valueOf(error));
+                }
+            });
+            stringReqData.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            directionAPIReq.add(stringReqData);
+        }
+    }
+
+    private void resetDirection(){
+        if(polylinePaths != null){
+            for (Polyline polyline:polylinePaths ) {
+                polyline.remove();
+            }
+            PickDesBounds = null;
+        }
+    }
+
+    private boolean setMapCameraBound(){
+            if(pickLocMarker != null && desLocMarker != null){
+                if(PickDesBounds != null){
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(PickDesBounds, getHeightWidth("w"), 500, 100));
+                }
+                return true;
+            }else if(pickLocMarker != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickLocMarker.getPosition(), 15.0f));
+                return true;
+            }else if(desLocMarker != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(desLocMarker.getPosition(), 15.0f));
+                return true;
+            }else if(curLocLL != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curLocLL, 15.0f));
+                return true;
+            }
+            return false;
+        }
+
+        private void resetMapCameraBound(){
+            if(pickLocMarker != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickLocMarker.getPosition(), 15.0f));
+            }else if(desLocMarker != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(desLocMarker.getPosition(), 15.0f));
+            }else if(curLocLL != null){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curLocLL, 15.0f));
+            }
+            resetDirection();
+        }
+
+        private void setTVCurLoc(String placeName, LatLng placeLL, boolean move){
+            pickLocCurTV.setText(placeName);
+            pickLocCurTV.setTextColor(Color.parseColor("#333333"));
+            mMap.setMyLocationEnabled(false);
+            if(pickLocMarker != null){
+                pickLocMarker.setPosition(placeLL);
+            }else{
+                pickLocMarker = mMap.addMarker(new MarkerOptions().position(placeLL).icon(BitmapDescriptorFactory.fromResource(R.drawable.top_car)).flat(true).anchor(0.5f, 0.5f));
+                pickLocMarker.setZIndex(99.0f);
+            }
+            if(move){
+                if(!setMapCameraBound()){
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(placeLL, 15.0f));
+                }
+            }
+            showDirection();
+        }
+
+        private void setTVDesLoc(String placeName, LatLng placeLL){
+            pickLocDesTV.setText(placeName);
+            pickLocDesTV.setTextColor(Color.parseColor("#333333"));
+            if(desLocMarker != null){
+                desLocMarker.setPosition(placeLL);
+            }else{
+                desLocMarker = mMap.addMarker(new MarkerOptions().position(placeLL));
+                desLocMarker.setZIndex(99.0f);
+            }
+            if(!setMapCameraBound()){
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(placeLL, 15.0f));
+            }
+            showDirection();
+        }
+
+        private void resetTVCurLoc(){
+            pickLocCurTV.setText(pickLocHint);
+            pickLocCurTV.setTextColor(Color.parseColor("#66000000"));
+            pickCurLocation = "";
+            if(pickLocMarker != null){
+                //mMap.setMyLocationEnabled(true);
+                pickLocMarker.remove();
+                pickLocMarker = null;
+            }
+            resetMapCameraBound();
+        }
+
+        private void resetTVDesLoc(){
+            pickLocDesTV.setText(desLocHint);
+            pickLocDesTV.setTextColor(Color.parseColor("#66000000"));
+            pickDesLocation = "";
+            if(desLocMarker != null){
+                desLocMarker.remove();
+                desLocMarker = null;
+            }
+            resetMapCameraBound();
+        }

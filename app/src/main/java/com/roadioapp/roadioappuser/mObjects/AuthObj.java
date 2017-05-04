@@ -16,7 +16,7 @@ public class AuthObj {
     public AuthObj(Activity act){
         this.activity = act;
         mAuth = FirebaseAuth.getInstance();
-
+        authUid = mAuth.getCurrentUser().getUid();
     }
 
     public AuthObj(){

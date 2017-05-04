@@ -3,6 +3,7 @@ package com.roadioapp.roadioappuser.mObjects;
 import android.app.Activity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -45,7 +46,6 @@ public class RequestBidsObj {
 
         mAuthObj = new AuthObj(activity);
         userInfo2 = new UserInfo(activity);
-        mAuthObj.updateUser();
     }
 
     public void getBids(){

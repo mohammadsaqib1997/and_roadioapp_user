@@ -12,8 +12,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
 import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
+import com.roadioapp.roadioappuser.mObjects.mProgressBar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +27,7 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
     private Activity activity;
 
     private String reqId;
+    private mProgressBar mProgressBar;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView title, vehicle_type, bidAmount;
@@ -41,6 +45,7 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
     public ViewBidAdapter(Activity mAct, HashMap<String, HashMap> dataSet) {
         this.saveData = dataSet;
         this.activity = mAct;
+        mProgressBar = new mProgressBar(activity);
     }
 
     @Override
@@ -97,7 +102,19 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
             public void onClick(View v) {
                 dialog.dismiss();
                 Log.e("CheckBidUid", bidUid+"--"+reqId);
-
+                mProgressBar.showProgressDialog();
+                UserActiveRequest userActiveRequest = new UserActiveRequest(activity);
+                userActiveRequest.userReqAct(reqId, bidUid, new UserActiveRequest.UserActReqCallbacks() {
+                    @Override
+                    public void onSuccess(boolean status, String err) {
+                        mProgressBar.hideProgressDialog();
+                        if(!status){
+                            Toast.makeText(activity, err, Toast.LENGTH_SHORT).show();
+                        }else{
+                            activity.startActivity(new Intent(activity, RequestActiveActivity.class));
+                        }
+                    }
+                });
                 //activity.startActivity(new Intent(activity, RequestActiveActivity.class));
                 /*userRequestModel.postReqParcel(new UserRequest.UserReqCallbacks() {
                     @Override

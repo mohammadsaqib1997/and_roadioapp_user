@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -29,7 +30,7 @@ public class UserRequest {
 
     private FirebaseAuth mAuth;
     private String authUID;
-    private DatabaseReference requestLiveCollection, requestCollection;
+    private DatabaseReference requestLiveCollection, requestActiveCollection, requestCollection;
     private StorageReference parcelImagesRef, parcelImgThmbRef;
 
     private Context context;
@@ -49,6 +50,7 @@ public class UserRequest {
             authUID = mAuth.getCurrentUser().getUid();
         }
         requestLiveCollection = FirebaseDatabase.getInstance().getReference().child("user_live_requests");
+        requestActiveCollection = FirebaseDatabase.getInstance().getReference().child("user_active_requests");
         requestCollection = FirebaseDatabase.getInstance().getReference().child("user_requests");
 
         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
@@ -119,7 +121,6 @@ public class UserRequest {
                             dataMap.put("parcelUri", downloadUrl.toString());
                             dataMap.put("parcelThmb", thmbDownloadUrl.toString());
                             dataMap.put("createdAt", ServerValue.TIMESTAMP);
-                            dataMap.put("status", "req.pending");
 
                             requestCollection.child(authUID).child(key).setValue(dataMap);
                             requestLiveCollection.child(authUID).child("reqId").setValue(key);
@@ -140,20 +141,39 @@ public class UserRequest {
             requestLiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    progressBarObj.hideProgressDialog();
-                    callbacks.onSuccess(dataSnapshot);
+                    if(dataSnapshot.exists()){
+                        progressBarObj.hideProgressDialog();
+                        callbacks.onSuccess("live");
+                    }else{
+                        requestActiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if(dataSnapshot.exists()){
+                                    progressBarObj.hideProgressDialog();
+                                    callbacks.onSuccess("active");
+                                }else{
+                                    progressBarObj.hideProgressDialog();
+                                    callbacks.onSuccess(null);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                progressBarObj.hideProgressDialog();
+                                callbacks.onSuccess(null);
+                            }
+                        });
+                    }
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
                     progressBarObj.hideProgressDialog();
-                    Toast.makeText(context, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                     callbacks.onSuccess(null);
                 }
             });
 
         }else{
-            Toast.makeText(context, "Auth Not Found!", Toast.LENGTH_SHORT).show();
             callbacks.onSuccess(null);
         }
     }
@@ -163,7 +183,7 @@ public class UserRequest {
     }
 
     public interface UserReqCheckCallbacks{
-        void onSuccess(DataSnapshot dataSnapshot);
+        void onSuccess(String status);
     }
 
 

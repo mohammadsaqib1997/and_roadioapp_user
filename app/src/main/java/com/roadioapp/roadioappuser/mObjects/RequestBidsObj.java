@@ -82,9 +82,8 @@ public class RequestBidsObj {
 
                             }
                         });
-                    }else{
-                        progressBar.setVisibility(View.GONE);
                     }
+                    progressBar.setVisibility(View.GONE);
                 }
 
                 @Override

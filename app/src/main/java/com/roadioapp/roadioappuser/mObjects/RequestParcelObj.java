@@ -1,7 +1,9 @@
 package com.roadioapp.roadioappuser.mObjects;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v4.widget.DrawerLayout;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,24 +15,25 @@ import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.roadioapp.roadioappuser.R;
+import com.roadioapp.roadioappuser.RequestActiveActivity;
 import com.roadioapp.roadioappuser.mModels.UserRequest;
 
 public class RequestParcelObj {
 
-    private Context context;
+    private Activity activity;
     private ButtonEffects btnEffectsObj;
     private UserRequest userRequestModel;
     private ConstantAssign constantAssignObj;
 
-    public RequestParcelObj(Context ctx, ConstantAssign constantAssign){
-        this.context = ctx;
-        this.btnEffectsObj = new ButtonEffects(ctx);
-        this.userRequestModel = new UserRequest(ctx, constantAssign);
+    public RequestParcelObj(Activity act, ConstantAssign constantAssign){
+        this.activity = act;
+        this.btnEffectsObj = new ButtonEffects(act);
+        this.userRequestModel = new UserRequest(act, constantAssign);
         this.constantAssignObj = constantAssign;
     }
 
     public void sendReqConfirmDialog() {
-        final Dialog dialog = new Dialog(context);
+        final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(false);
         dialog.setContentView(R.layout.confirm_dialog);
@@ -62,7 +65,7 @@ public class RequestParcelObj {
                             constantAssignObj.hasRequest = true;
                             constantAssignObj.sendBtnText.setText("View Bids");
                         }else {
-                            Toast.makeText(context, "Bad Request!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "Bad Request!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -72,7 +75,7 @@ public class RequestParcelObj {
     }
 
     private void sendReqSuccessDialog(){
-        final Dialog dialog = new Dialog(context);
+        final Dialog dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(false);
         dialog.setContentView(R.layout.success_dialog);
@@ -116,10 +119,13 @@ public class RequestParcelObj {
     public void checkUserRequest(){
         userRequestModel.userRequestCheck(new UserRequest.UserReqCheckCallbacks() {
             @Override
-            public void onSuccess(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
+            public void onSuccess(String status) {
+                if(status!=null && status.equals("live")){
                     constantAssignObj.hasRequest = true;
                     constantAssignObj.sendBtnText.setText("View Bids");
+                }else if(status!=null && status.equals("active")){
+                    activity.finishAffinity();
+                    activity.startActivity(new Intent(activity, RequestActiveActivity.class));
                 }
             }
         });

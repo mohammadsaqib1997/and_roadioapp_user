@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -37,7 +39,7 @@ public class UserActiveRequest {
         statusArr = act.getResources().getStringArray(R.array.req_status);
     }
 
-    public void userReqAct(final String req_id, final String driver_uid, final UserActiveRequest.UserActReqCallbacks callback){
+    public void userReqAct(final String req_id, final String driver_uid, final UserActiveRequest.UserActReqCallback callback){
         if(mAuthObj.isLoginUser()){
             userLiveRequestCol.child(mAuthObj.authUid).removeValue(new DatabaseReference.CompletionListener() {
                 @Override
@@ -67,8 +69,45 @@ public class UserActiveRequest {
         }
     }
 
+    public void userActReqStatusCall(final UserActReqStatusCallback callback){
+        if(mAuthObj.isLoginUser()){
+            userActiveRequestCol.child(mAuthObj.authUid).addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    callback.onSuccess(true, "", dataSnapshot);
+                }
 
-    public interface UserActReqCallbacks{
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                    callback.onSuccess(true, "", dataSnapshot);
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+                    callback.onSuccess(true, "", dataSnapshot);
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    callback.onSuccess(false, databaseError.getMessage(), null);
+                }
+            });
+        }else{
+            callback.onSuccess(false, "Auth Not Found!", null);
+        }
+    }
+
+
+    public interface UserActReqCallback{
         void onSuccess(boolean status, String err);
+    }
+
+    public interface  UserActReqStatusCallback{
+        void onSuccess(boolean status, String err, DataSnapshot dataSnapshot);
     }
 }

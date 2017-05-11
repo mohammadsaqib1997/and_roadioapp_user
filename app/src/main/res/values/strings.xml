@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">RoadioAppUser</string>
     <!--<string name="app_api_domain">http://178.62.103.189/api/index.php/</string>-->
-    <string name="app_api_domain">http://150.129.5.74:3000/api</string>
+    <string name="app_api_domain">http://107.170.74.248:4000/api</string>
 
 
     <string name="confirmation_msg_1">
@@ -32,6 +32,7 @@
 
     <array name="req_status">
         <item>req.pending</item>
+        <item>req.accept</item>
         <item>req.active</item>
         <item>req.completed</item>
     </array>

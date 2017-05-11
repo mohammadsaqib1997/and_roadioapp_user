@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -11,11 +12,17 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
+import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 
 public class RequestActiveActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     MapFragment mapFragment;
     GoogleMap mMap;
+    ButtonEffects btnEffects;
+
+    UserActiveRequest userActiveRequestModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +36,19 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
     private void setProperties(){
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        userActiveRequestModel = new UserActiveRequest(this);
+        userActiveRequestModel.userActReqStatusCall(new UserActiveRequest.UserActReqStatusCallback() {
+            @Override
+            public void onSuccess(boolean status, String err, DataSnapshot dataSnapshot) {
+                Log.e("CheckCallBacks", err+"--\n"+dataSnapshot);
+            }
+        });
+
+        btnEffects = new ButtonEffects(this);
+
+        LinearLayout contactDBtn = (LinearLayout) findViewById(R.id.contactDBtn);
+        btnEffects.btnEventEffRounded(contactDBtn);
     }
 
     @Override

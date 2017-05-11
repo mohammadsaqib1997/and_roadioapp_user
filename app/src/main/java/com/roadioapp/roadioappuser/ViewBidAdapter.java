@@ -86,7 +86,7 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
         LinearLayout btnsCon = (LinearLayout) dialog.findViewById(R.id.btnsCon);
         LinearLayout cancelBtn = (LinearLayout) dialog.findViewById(R.id.cancelBtn);
         LinearLayout yesBtn = (LinearLayout) dialog.findViewById(R.id.yesBtn);
-        ButtonEffects btnEffectsObj = new ButtonEffects(context);
+        ButtonEffects btnEffectsObj = new ButtonEffects(activity);
         for (int i = 0; i < btnsCon.getChildCount(); i++) {
             LinearLayout selectBtn = (LinearLayout) btnsCon.getChildAt(i);
             btnEffectsObj.btnEventEffRounded(selectBtn);
@@ -101,35 +101,20 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
-                Log.e("CheckBidUid", bidUid+"--"+reqId);
                 mProgressBar.showProgressDialog();
                 UserActiveRequest userActiveRequest = new UserActiveRequest(activity);
-                userActiveRequest.userReqAct(reqId, bidUid, new UserActiveRequest.UserActReqCallbacks() {
+                userActiveRequest.userReqAct(reqId, bidUid, new UserActiveRequest.UserActReqCallback() {
                     @Override
                     public void onSuccess(boolean status, String err) {
                         mProgressBar.hideProgressDialog();
                         if(!status){
                             Toast.makeText(activity, err, Toast.LENGTH_SHORT).show();
                         }else{
+                            activity.finishAffinity();
                             activity.startActivity(new Intent(activity, RequestActiveActivity.class));
                         }
                     }
                 });
-                //activity.startActivity(new Intent(activity, RequestActiveActivity.class));
-                /*userRequestModel.postReqParcel(new UserRequest.UserReqCallbacks() {
-                    @Override
-                    public void onSuccess(boolean res) {
-                        dialog.dismiss();
-                        *//*if(res){
-                            resetReqSendParcel();
-                            sendReqSuccessDialog();
-                            constantAssignObj.hasRequest = true;
-                            constantAssignObj.sendBtnText.setText("View Bids");
-                        }else {
-                            Toast.makeText(context, "Bad Request!", Toast.LENGTH_SHORT).show();
-                        }*//*
-                    }
-                });*/
             }
         });
         dialog.show();

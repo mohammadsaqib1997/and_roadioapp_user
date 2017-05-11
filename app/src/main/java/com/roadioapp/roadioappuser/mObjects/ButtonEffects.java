@@ -1,6 +1,6 @@
 package com.roadioapp.roadioappuser.mObjects;
 
-import android.content.Context;
+import android.app.Activity;
 import android.graphics.Color;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,10 +11,10 @@ import com.roadioapp.roadioappuser.R;
 
 public class ButtonEffects {
 
-    private Context context;
+    private Activity activity;
 
-    public ButtonEffects(Context ctx){
-        this.context = ctx;
+    public ButtonEffects(Activity act){
+        this.activity = act;
     }
 
     public void btnEventEffRounded(final LinearLayout view){

@@ -246,16 +246,16 @@ public class MapActivity extends AppCompatActivity implements
             }
         });
 
-        getDeviceLocation(false, false, null, true);
-
-        requestParcelObj.checkUserRequest();
+        getDeviceLocation(false, false, null, true, true);
     }
 
-    private void getDeviceLocation(boolean anim, final boolean defLatLng, final Location curLocation, boolean move) {
+    private void getDeviceLocation(boolean anim, final boolean defLatLng, final Location curLocation, boolean move, boolean boundMove) {
         if (permissionCheckObj.permissionCheck()) {
             if (isGPSEnabled()) {
                 if(constantAssignObj.PickDesBounds != null){
-                    mMapObj.mapMoveCam(null, constantAssignObj.PickDesBounds, false, anim);
+                    if(boundMove){
+                        mMapObj.mapMoveCam(null, constantAssignObj.PickDesBounds, false, anim);
+                    }
                 }else{
                     mLastKnownLocation = (curLocation != null) ? curLocation : LocationServices.FusedLocationApi.getLastLocation(mMapLocationObj.mGoogleApiClient);
                     if (mLastKnownLocation != null) {
@@ -308,7 +308,7 @@ public class MapActivity extends AppCompatActivity implements
         switch (getId) {
             case R.id.setCurLocBtn:
                 if (constantAssignObj.LL2 == null) {
-                    getDeviceLocation(true, true, null, true);
+                    getDeviceLocation(true, true, null, true, false);
                 }else{
                     if(constantAssignObj.PickDesBounds != null){
                         mMapObj.mapMoveCam(null, constantAssignObj.PickDesBounds, false, true);
@@ -408,7 +408,7 @@ public class MapActivity extends AppCompatActivity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        getDeviceLocation(false, false, location, false);
+        getDeviceLocation(false, false, location, false, false);
     }
 
     @Override
@@ -447,6 +447,8 @@ public class MapActivity extends AppCompatActivity implements
         onlineDriverObj = new OnlineDriverObj(constantAssignObj, this);
 
         navigationFuncObj.assignNavigationFunc();
+
+        requestParcelObj.checkUserRequest();
 
         mainActCon = (RelativeLayout) findViewById(R.id.mainActCon);
 

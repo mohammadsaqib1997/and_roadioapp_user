@@ -120,7 +120,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <ImageView
-                    android:src="@drawable/ic_proccess"
+                    android:background="@drawable/ic_proccess"
                     android:layout_width="30dp"
                     android:layout_height="30dp" />
                 <LinearLayout
@@ -159,7 +159,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <ImageView
-                    android:src="@drawable/ic_proccess"
+                    android:background="@drawable/ic_proccess"
                     android:layout_width="30dp"
                     android:layout_height="30dp" />
                 <LinearLayout
@@ -201,6 +201,7 @@
                 android:layout_width="1dp"
                 android:layout_height="30dp" />
             <LinearLayout
+                android:id="@+id/sts_complete_con"
                 android:alpha="0.5"
                 android:paddingLeft="20dp"
                 android:orientation="horizontal"
@@ -208,7 +209,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <ImageView
-                    android:src="@drawable/ic_proccess"
+                    android:background="@drawable/ic_proccess"
                     android:layout_width="30dp"
                     android:layout_height="30dp" />
                 <LinearLayout
@@ -252,6 +253,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp" />
             <LinearLayout
+                android:id="@+id/ratingCon"
                 android:visibility="gone"
                 android:orientation="vertical"
                 android:layout_width="match_parent"

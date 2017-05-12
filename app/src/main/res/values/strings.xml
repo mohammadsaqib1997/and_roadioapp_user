@@ -34,7 +34,7 @@
         <item>req.pending</item>
         <item>req.accept</item>
         <item>req.active</item>
-        <item>req.completed</item>
+        <item>req.complete</item>
     </array>
 
 </resources>

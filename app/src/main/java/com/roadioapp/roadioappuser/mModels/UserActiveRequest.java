@@ -10,6 +10,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.mObjects.AuthObj;
 
@@ -71,25 +72,10 @@ public class UserActiveRequest {
 
     public void userActReqStatusCall(final UserActReqStatusCallback callback){
         if(mAuthObj.isLoginUser()){
-            userActiveRequestCol.child(mAuthObj.authUid).addChildEventListener(new ChildEventListener() {
+            userActiveRequestCol.child(mAuthObj.authUid).addValueEventListener(new ValueEventListener() {
                 @Override
-                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                public void onDataChange(DataSnapshot dataSnapshot) {
                     callback.onSuccess(true, "", dataSnapshot);
-                }
-
-                @Override
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                    callback.onSuccess(true, "", dataSnapshot);
-                }
-
-                @Override
-                public void onChildRemoved(DataSnapshot dataSnapshot) {
-                    callback.onSuccess(true, "", dataSnapshot);
-                }
-
-                @Override
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
                 }
 
                 @Override

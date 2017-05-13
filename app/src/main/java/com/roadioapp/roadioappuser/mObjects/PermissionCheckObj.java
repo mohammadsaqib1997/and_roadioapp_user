@@ -26,8 +26,25 @@ public class PermissionCheckObj {
         return true;
     }
 
+    public boolean callPermissionCheck(){
+        if (verCheck()) {
+            int hasCallPermission = activity.checkSelfPermission(Manifest.permission.CALL_PHONE);
+            if (hasCallPermission != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void setCallPermission(){
+        if (verCheck()) {
+            activity.requestPermissions(new String[]{android.Manifest.permission.CALL_PHONE},
+                    ConstantAssign.PERM_REQUEST_CALL);
+        }
+    }
+
     public void setPermission() {
-        if (android.os.Build.VERSION.SDK_INT >= M) {
+        if (verCheck()) {
             activity.requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},
                     ConstantAssign.PERM_REQUEST_LOCATION);
         }

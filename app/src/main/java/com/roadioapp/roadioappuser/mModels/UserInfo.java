@@ -1,5 +1,6 @@
 package com.roadioapp.roadioappuser.mModels;
 
+import android.app.Activity;
 import android.content.Context;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,7 +21,7 @@ public class UserInfo {
 
     }
 
-    public UserInfo(Context context){
+    public UserInfo(Activity activity){
         userCollection = FirebaseDatabase.getInstance().getReference().child("users");
     }
 

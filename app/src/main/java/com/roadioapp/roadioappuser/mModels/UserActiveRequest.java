@@ -88,7 +88,6 @@ public class UserActiveRequest {
         }
     }
 
-
     public interface UserActReqCallback{
         void onSuccess(boolean status, String err);
     }

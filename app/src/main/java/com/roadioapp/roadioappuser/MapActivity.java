@@ -448,7 +448,8 @@ public class MapActivity extends AppCompatActivity implements
 
         navigationFuncObj.assignNavigationFunc();
 
-        requestParcelObj.checkUserRequest();
+        requestParcelObj.checkUserLiveRequest();
+        requestParcelObj.checkUserActiveRequest();
 
         mainActCon = (RelativeLayout) findViewById(R.id.mainActCon);
 

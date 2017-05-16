@@ -185,6 +185,7 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp" />
                         <TextView
+                            android:id="@+id/active_time_TV"
                             android:textSize="14sp"
                             android:textColor="@color/colorPrimaryDark"
                             android:text="12:36 PM"
@@ -236,12 +237,12 @@
                             android:layout_height="18dp" />
 
                         <TextView
+                            android:id="@+id/complete_time_TV"
                             android:textSize="14sp"
                             android:textColor="@color/colorPrimaryDark"
                             android:text="00:00"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/textView" />
+                            android:layout_height="wrap_content" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

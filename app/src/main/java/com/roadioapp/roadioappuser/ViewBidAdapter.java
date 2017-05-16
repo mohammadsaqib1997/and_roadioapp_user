@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
 import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
@@ -103,7 +104,7 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
                 dialog.dismiss();
                 mProgressBar.showProgressDialog();
                 UserActiveRequest userActiveRequest = new UserActiveRequest(activity);
-                userActiveRequest.userReqAct(reqId, bidUid, new UserActiveRequest.UserActReqCallback() {
+                userActiveRequest.userReqAct(reqId, bidUid, new ObjectInterfaces.SimpleCallback() {
                     @Override
                     public void onSuccess(boolean status, String err) {
                         mProgressBar.hideProgressDialog();

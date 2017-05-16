@@ -15,6 +15,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.ViewBidAdapter;
+import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.DriverBid;
 import com.roadioapp.roadioappuser.mModels.UserInfo;
 
@@ -46,6 +47,23 @@ public class RequestBidsObj {
 
         mAuthObj = new AuthObj(activity);
         userInfo2 = new UserInfo(activity);
+    }
+
+    public void removeReq(final ObjectInterfaces.SimpleCallback callback){
+        if(mAuthObj.isLoginUser()){
+            userLiveRequestCollection.child(mAuthObj.authUid).removeValue(new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    if(databaseError != null){
+                        callback.onSuccess(false, databaseError.getMessage());
+                    }else{
+                        callback.onSuccess(true, "");
+                    }
+                }
+            });
+        }else{
+            callback.onSuccess(false, "Auth Not Found!");
+        }
     }
 
     public void getBids(){
@@ -129,5 +147,7 @@ public class RequestBidsObj {
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(vbAdapter);
     }
+
+
 
 }

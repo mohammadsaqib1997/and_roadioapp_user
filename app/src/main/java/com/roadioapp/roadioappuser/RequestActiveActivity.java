@@ -23,18 +23,26 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.firebase.database.DataSnapshot;
+import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
 import com.roadioapp.roadioappuser.mModels.UserInfo;
 import com.roadioapp.roadioappuser.mModels.UserRequest;
 import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.PermissionCheckObj;
+import com.roadioapp.roadioappuser.mObjects.mProgressBar;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class RequestActiveActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     MapFragment mapFragment;
     GoogleMap mMap;
     ButtonEffects btnEffects;
+    mProgressBar progressBarObj;
+    DateFormat formatter;
 
     LinearLayout
             stsPendingCon,
@@ -44,13 +52,16 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             subRatingBtn,
             ratingCon,
             star_rating_con;
+    TextView complete_time_TV, active_time_TV;
 
     UserActiveRequest userActiveRequestModel;
     UserInfo userInfoModel;
 
     String[] statusArr;
     int saveStars = 0;
-    String reqDriverUIDMob = "";
+    long active_time = 0, complete_time = 0;
+    boolean firstRes = true;
+    String reqDriverMob = "", reqDriverUID = "";
 
     PermissionCheckObj permissionCheckObj;
 
@@ -64,8 +75,14 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void setProperties(){
+        formatter = new SimpleDateFormat("dd MMM, yyyy hh:mm:ss a");
+
         statusArr = getResources().getStringArray(R.array.req_status);
         permissionCheckObj = new PermissionCheckObj(this);
+        progressBarObj = new mProgressBar(this);
+
+        userInfoModel = new UserInfo(this);
+        userActiveRequestModel = new UserActiveRequest(this);
 
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -73,6 +90,9 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         stsPendingCon = (LinearLayout) findViewById(R.id.sts_pending_con);
         stsActiveCon = (LinearLayout) findViewById(R.id.sts_active_con);
         stsCompleteCon = (LinearLayout) findViewById(R.id.sts_complete_con);
+
+        complete_time_TV = (TextView) findViewById(R.id.complete_time_TV);
+        active_time_TV = (TextView) findViewById(R.id.active_time_TV);
 
         ratingCon = (LinearLayout) findViewById(R.id.ratingCon);
         contactDBtn = (LinearLayout) findViewById(R.id.contactDBtn);
@@ -88,7 +108,20 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void onClick(View v) {
                 if(saveStars > 0){
-                    Log.e("SetRating", "User Rating: "+saveStars);
+                    progressBarObj.showProgressDialog();
+                    userActiveRequestModel.completeJob(saveStars, new ObjectInterfaces.SimpleCallback() {
+                        @Override
+                        public void onSuccess(boolean status, String err) {
+                            progressBarObj.hideProgressDialog();
+                            if(status){
+                                finishAffinity();
+                                startActivity(new Intent(RequestActiveActivity.this, MapActivity.class));
+                            }else{
+                                Toast.makeText(RequestActiveActivity.this, err, Toast.LENGTH_SHORT).show();
+                            }
+
+                        }
+                    });
                 }else{
                     Toast.makeText(RequestActiveActivity.this, "Please rate your Rider!", Toast.LENGTH_SHORT).show();
                 }
@@ -109,16 +142,33 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             });
         }
 
-        userInfoModel = new UserInfo(this);
-
-        userActiveRequestModel = new UserActiveRequest(this);
-        userActiveRequestModel.userActReqStatusCall(new UserActiveRequest.UserActReqStatusCallback() {
+        progressBarObj.showProgressDialog();
+        userActiveRequestModel.userActReqStatusCall(new ObjectInterfaces.UserActReqStatusCallback() {
             @Override
             public void onSuccess(boolean status, String err, DataSnapshot dataSnapshot) {
-                String reqDriverUID = dataSnapshot.child("driver_uid").getValue().toString();
-
-                String reqStatus = dataSnapshot.child("status").getValue().toString();
-                statusChangeUI(reqStatus);
+                if(dataSnapshot.exists()){
+                    reset_stars();
+                    saveStars = 0;
+                    reqDriverUID = dataSnapshot.child("driver_uid").getValue().toString();
+                    String reqStatus = dataSnapshot.child("status").getValue().toString();
+                    active_time = (Long) dataSnapshot.child("active_time").getValue();
+                    complete_time = (Long) dataSnapshot.child("complete_time").getValue();
+                    statusChangeUI(reqStatus);
+                    if(firstRes){
+                        userInfoModel.getUserInfo(reqDriverUID, new UserInfo.UserCallback() {
+                            @Override
+                            public void onSuccess(DataSnapshot dataSnapshot, String errMsg) {
+                                progressBarObj.hideProgressDialog();
+                                if(errMsg != null){
+                                    Toast.makeText(RequestActiveActivity.this, errMsg, Toast.LENGTH_SHORT).show();
+                                }else{
+                                    reqDriverMob = userInfoModel.getMobNo();
+                                }
+                            }
+                        });
+                        firstRes = false;
+                    }
+                }
             }
         });
 
@@ -155,18 +205,30 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             stsUI_inAct(stsPendingCon);
             stsUI_inAct(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
+
+            setTime(active_time_TV, "00:00");
+            setTime(complete_time_TV, "00:00");
         }else if(reqSts != null && reqSts.equals(statusArr[1])){
             stsUI_act(stsPendingCon);
             stsUI_inAct(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
+
+            setTime(active_time_TV, "00:00");
+            setTime(complete_time_TV, "00:00");
         }else if(reqSts != null && reqSts.equals(statusArr[2])){
             stsUI_act(stsPendingCon);
             stsUI_act(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
+
+            setTime(active_time_TV, convertDate(active_time));
+            setTime(complete_time_TV, "00:00");
         }else if(reqSts != null && reqSts.equals(statusArr[3])){
             stsUI_act(stsPendingCon);
             stsUI_act(stsActiveCon);
             stsUI_act(stsCompleteCon);
+
+            setTime(active_time_TV, convertDate(active_time));
+            setTime(complete_time_TV, convertDate(complete_time));
         }else{
             Log.e("CheckCallBacks", "Req No Status Found!");
         }
@@ -246,16 +308,25 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
 
     public void callDriverIntent(){
         Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:03777788880"));
+        callIntent.setData(Uri.parse("tel:+"+reqDriverMob));
         startActivity(callIntent);
     }
 
     private void smsDriverIntent(){
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("sms:03777788880")));
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("sms:+"+reqDriverMob)));
     }
 
-    private void getDriverUID(){
+    private void setTime(TextView tv, String text){
+        tv.setText(text);
+    }
 
+    private String convertDate(long timestamp){
+        if(timestamp == 0){
+            return "00:00";
+        }else{
+            Date date = new Date(timestamp);
+            return formatter.format(date);
+        }
     }
 
     @Override

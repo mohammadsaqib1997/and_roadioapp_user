@@ -20,6 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
 
@@ -36,13 +37,11 @@ public class UserRequest {
     private Context context;
 
     //objects
-    private mProgressBar progressBarObj;
     private ConstantAssign constantAssign;
 
     public UserRequest(Context ctx, ConstantAssign constantAssign){
         this.context = ctx;
 
-        progressBarObj = new mProgressBar(ctx);
         this.constantAssign = constantAssign;
 
         mAuth = FirebaseAuth.getInstance();
@@ -62,9 +61,8 @@ public class UserRequest {
         return authUID != null;
     }
 
-    public void postReqParcel(final UserReqCallbacks callbacks){
+    public void postReqParcel(final ObjectInterfaces.SimpleCallback callbacks){
         if(uidExist()){
-            progressBarObj.showProgressDialog();
             final String orgLat = String.valueOf(constantAssign.LL1.latitude);
             final String orgLng = String.valueOf(constantAssign.LL1.longitude);
             final String orgText = constantAssign.pickLocCurTV.getText().toString();
@@ -83,9 +81,7 @@ public class UserRequest {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     e.printStackTrace();
-                    progressBarObj.hideProgressDialog();
-                    callbacks.onSuccess(false);
-                    Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    callbacks.onSuccess(false, e.getMessage());
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -95,11 +91,9 @@ public class UserRequest {
                     uploadTask.addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            pracelImgName.delete();
                             e.printStackTrace();
-                            progressBarObj.hideProgressDialog();
-                            callbacks.onSuccess(false);
-                            Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            pracelImgName.delete();
+                            callbacks.onSuccess(false, e.getMessage());
                         }
                     }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
@@ -124,67 +118,59 @@ public class UserRequest {
 
                             requestCollection.child(authUID).child(key).setValue(dataMap);
                             requestLiveCollection.child(authUID).child("reqId").setValue(key);
-                            progressBarObj.hideProgressDialog();
-                            callbacks.onSuccess(true);
+                            callbacks.onSuccess(true, "");
                         }
                     });
                 }
             });
         }else{
-            Toast.makeText(context, "Auth Not Found!", Toast.LENGTH_SHORT).show();
+            callbacks.onSuccess(false, "Auth Not Found!");
         }
     }
 
-    public void userRequestCheck(final UserReqCheckCallbacks callbacks){
+    public void userLiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
         if(uidExist()){
-            progressBarObj.showProgressDialog();
-            requestLiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
+            requestLiveCollection.child(authUID).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if(dataSnapshot.exists()){
-                        progressBarObj.hideProgressDialog();
-                        callbacks.onSuccess("live");
+                        callbacks.onSuccess(true, "");
                     }else{
-                        requestActiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if(dataSnapshot.exists()){
-                                    progressBarObj.hideProgressDialog();
-                                    callbacks.onSuccess("active");
-                                }else{
-                                    progressBarObj.hideProgressDialog();
-                                    callbacks.onSuccess(null);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                progressBarObj.hideProgressDialog();
-                                callbacks.onSuccess(null);
-                            }
-                        });
+                        callbacks.onSuccess(false, "");
                     }
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-                    progressBarObj.hideProgressDialog();
-                    callbacks.onSuccess(null);
+                    callbacks.onSuccess(false, databaseError.getMessage());
                 }
             });
 
         }else{
-            callbacks.onSuccess(null);
+            callbacks.onSuccess(false, "Auth Not Found!");
         }
     }
 
-    public interface UserReqCallbacks{
-        void onSuccess(boolean res);
-    }
+    public void userActiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
+        if (uidExist()) {
+            requestActiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        callbacks.onSuccess(true, "");
+                    } else {
+                        callbacks.onSuccess(false, "");
+                    }
+                }
 
-    public interface UserReqCheckCallbacks{
-        void onSuccess(String status);
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    callbacks.onSuccess(false, databaseError.getMessage());
+                }
+            });
+        }else{
+            callbacks.onSuccess(false, "Auth Not Found!");
+        }
     }
-
 
 }

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
 import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.RequestActiveActivity;
+import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.UserRequest;
 
 public class RequestParcelObj {
@@ -24,12 +25,14 @@ public class RequestParcelObj {
     private ButtonEffects btnEffectsObj;
     private UserRequest userRequestModel;
     private ConstantAssign constantAssignObj;
+    private mProgressBar progressBarObj;
 
     public RequestParcelObj(Activity act, ConstantAssign constantAssign){
         this.activity = act;
         this.btnEffectsObj = new ButtonEffects(act);
         this.userRequestModel = new UserRequest(act, constantAssign);
         this.constantAssignObj = constantAssign;
+        this.progressBarObj = new mProgressBar(act);
     }
 
     public void sendReqConfirmDialog() {
@@ -55,17 +58,19 @@ public class RequestParcelObj {
         yesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                userRequestModel.postReqParcel(new UserRequest.UserReqCallbacks() {
+                progressBarObj.showProgressDialog();
+                userRequestModel.postReqParcel(new ObjectInterfaces.SimpleCallback() {
                     @Override
-                    public void onSuccess(boolean res) {
+                    public void onSuccess(boolean status, String res) {
+                        progressBarObj.hideProgressDialog();
                         dialog.dismiss();
-                        if(res){
+                        if(status){
                             resetReqSendParcel();
                             sendReqSuccessDialog();
                             constantAssignObj.hasRequest = true;
                             constantAssignObj.sendBtnText.setText("View Bids");
                         }else {
-                            Toast.makeText(activity, "Bad Request!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, res, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -116,14 +121,28 @@ public class RequestParcelObj {
         constantAssignObj.sendBtn.setVisibility(View.GONE);
     }
 
-    public void checkUserRequest(){
-        userRequestModel.userRequestCheck(new UserRequest.UserReqCheckCallbacks() {
+    public void checkUserLiveRequest(){
+        userRequestModel.userLiveRequestCheck(new ObjectInterfaces.SimpleCallback() {
             @Override
-            public void onSuccess(String status) {
-                if(status!=null && status.equals("live")){
+            public void onSuccess(boolean status, String res) {
+                if(status){
                     constantAssignObj.hasRequest = true;
                     constantAssignObj.sendBtnText.setText("View Bids");
-                }else if(status!=null && status.equals("active")){
+                }else{
+                    constantAssignObj.hasRequest = false;
+                    constantAssignObj.sendBtnText.setText("Send Parcel");
+                }
+            }
+        });
+    }
+
+    public void checkUserActiveRequest(){
+        progressBarObj.showProgressDialog();
+        userRequestModel.userActiveRequestCheck(new ObjectInterfaces.SimpleCallback() {
+            @Override
+            public void onSuccess(boolean status, String res) {
+                progressBarObj.hideProgressDialog();
+                if(status){
                     activity.finishAffinity();
                     activity.startActivity(new Intent(activity, RequestActiveActivity.class));
                 }

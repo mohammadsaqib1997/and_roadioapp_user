@@ -373,6 +373,17 @@ public class MapActivity extends AppCompatActivity implements
                 }
 
                 break;
+            case ConstantAssign.PERM_REQUEST_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    captureImageObj.openGallery();
+                    Toast.makeText(MapActivity.this, "Storage Permission Access", Toast.LENGTH_SHORT)
+                            .show();
+                }else{
+                    permissionCheckObj.setStoragePermission();
+                    Toast.makeText(MapActivity.this, "Storage Permission Denied", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
@@ -393,6 +404,9 @@ public class MapActivity extends AppCompatActivity implements
         } else if (requestCode == captureImageObj.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             requestParcelObj.setReqSendParcel();
             captureImageObj.imageToBytes();
+        } else if (requestCode == captureImageObj.REQUEST_IMAGE_PICK && resultCode == RESULT_OK){
+            requestParcelObj.setReqSendParcel();
+            captureImageObj.selImageToBytes(data.getData());
         }
     }
 

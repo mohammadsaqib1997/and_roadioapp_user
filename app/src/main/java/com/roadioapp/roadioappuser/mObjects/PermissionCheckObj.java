@@ -50,6 +50,23 @@ public class PermissionCheckObj {
         }
     }
 
+    public boolean storagePermissionCheck(){
+        if (verCheck()) {
+            int hasCallPermission = activity.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (hasCallPermission != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void setStoragePermission(){
+        if (verCheck()) {
+            activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    ConstantAssign.PERM_REQUEST_STORAGE);
+        }
+    }
+
     public void showPermissionErr() {
         Toast.makeText(activity, "Your mobile not allowed this Permission!", Toast.LENGTH_LONG).show();
     }

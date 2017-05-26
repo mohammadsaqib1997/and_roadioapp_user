@@ -22,6 +22,7 @@ public class ConstantAssign {
 
     public static final int PERM_REQUEST_LOCATION = 100;
     public static final int PERM_REQUEST_CALL = 200;
+    public static final int PERM_REQUEST_STORAGE = 300;
 
 
     public TextView pickLocCurTV, pickLocDesTV, sendBtnText, estDistance, estTime;

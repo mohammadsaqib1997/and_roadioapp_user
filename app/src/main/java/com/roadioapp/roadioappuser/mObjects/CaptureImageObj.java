@@ -27,21 +27,23 @@ public class CaptureImageObj {
     private Context context;
     private Activity activity;
     private ConstantAssign constantAssignObj;
+    private PermissionCheckObj permissionCheckObj;
 
     private String mCurrentPhotoPath;
     public final int REQUEST_IMAGE_CAPTURE = 1;
+    public final int REQUEST_IMAGE_PICK = 2;
 
     public CaptureImageObj(Context ctx, Activity act, ConstantAssign constantAssign){
         this.context = ctx;
         this.activity = act;
         this.constantAssignObj = constantAssign;
+        this.permissionCheckObj = new PermissionCheckObj(act);
     }
 
 
     public void dispatchTakePictureIntent() {
         if (constantAssignObj.pickLocMarker != null && constantAssignObj.desLocMarker != null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setCancelable(false);
             builder.setMessage("Take a picture of your parcel!");
             builder.setPositiveButton("Take Picture", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
@@ -66,9 +68,13 @@ public class CaptureImageObj {
                     }
                 }
             });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            builder.setNegativeButton("Select Gallery Image", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    dialog.dismiss();
+                    if(!permissionCheckObj.storagePermissionCheck()){
+                        permissionCheckObj.setStoragePermission();
+                    }else{
+                        openGallery();
+                    }
                 }
             });
             AlertDialog dialog = builder.create();
@@ -95,18 +101,46 @@ public class CaptureImageObj {
         return image;
     }
 
+    public void openGallery(){
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        activity.startActivityForResult(Intent.createChooser(intent, "Select Image"), REQUEST_IMAGE_PICK);
+    }
+
     public void imageToBytes(){
         if(mCurrentPhotoPath != null && !mCurrentPhotoPath.isEmpty()){
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             Bitmap imageBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            genBitmapToSetValues(imageBitmap);
+            /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
             constantAssignObj.selImgByteArray = stream.toByteArray();
 
             Bitmap thmbBM = Bitmap.createScaledBitmap(imageBitmap, (int)(imageBitmap.getWidth()*0.2), (int)(imageBitmap.getHeight()*0.2), false);
             ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
             thmbBM.compress(Bitmap.CompressFormat.JPEG, 100, stream1);
-            constantAssignObj.selImgThmbByteArray = stream1.toByteArray();
+            constantAssignObj.selImgThmbByteArray = stream1.toByteArray();*/
         }
+    }
+
+    public void selImageToBytes(Uri selFileURI){
+        try {
+            Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), selFileURI);
+            genBitmapToSetValues(imageBitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void genBitmapToSetValues(Bitmap bitmap){
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+        constantAssignObj.selImgByteArray = stream.toByteArray();
+
+        Bitmap thmbBM = Bitmap.createScaledBitmap(bitmap, (int)(bitmap.getWidth()*0.2), (int)(bitmap.getHeight()*0.2), false);
+        ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
+        thmbBM.compress(Bitmap.CompressFormat.JPEG, 100, stream1);
+        constantAssignObj.selImgThmbByteArray = stream1.toByteArray();
     }
 }

@@ -367,6 +367,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content">
                             <ImageView
+                                android:padding="6dp"
                                 android:src="@drawable/van"
                                 android:layout_width="60dp"
                                 android:layout_height="60dp" />

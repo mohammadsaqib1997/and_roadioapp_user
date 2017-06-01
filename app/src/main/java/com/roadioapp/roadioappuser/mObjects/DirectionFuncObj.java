@@ -92,7 +92,7 @@ public class DirectionFuncObj {
 
                             setTVCurLoc(newLoc, null, false);
                         } else {
-                            Toast.makeText(activity, status, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, userDataResponse, Toast.LENGTH_SHORT).show();
                         }
 
                     } catch (JSONException e) {

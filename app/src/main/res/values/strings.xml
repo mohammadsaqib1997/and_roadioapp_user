@@ -14,8 +14,8 @@
     <string name="basicInfo_title">Basic Information</string>
 
     <string name="title_activity_map">Map</string>
-    <string name="google_app_key">AIzaSyCNtzqLNFY9xNwnvoYgqh48zDtQ1s7AKbg</string>
-    <string name="google_url_key">AIzaSyADoSPA53om6p0nZnhYmpUnNdg8NFPqzQA</string>
+    <string name="google_app_key">AIzaSyAyy7fvuO0LxwuOhL8KDBjteegMaOAShpE</string>
+    <string name="google_url_key">AIzaSyBolC4x_OuWyBxj4RJEvMlqaQUonJHzej0</string>
 
     <string name="confirm_req_msg">Are you sure you want to\nsend a parcel?</string>
     <string name="confirm_bid_msg">Are you sure\nYou want to bid now?</string>

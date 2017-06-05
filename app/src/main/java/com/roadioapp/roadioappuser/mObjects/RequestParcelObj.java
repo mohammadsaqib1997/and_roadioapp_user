@@ -30,9 +30,10 @@ public class RequestParcelObj {
     public RequestParcelObj(Activity act, ConstantAssign constantAssign){
         this.activity = act;
         this.btnEffectsObj = new ButtonEffects(act);
-        this.userRequestModel = new UserRequest(act, constantAssign);
+        this.userRequestModel = new UserRequest(act);
         this.constantAssignObj = constantAssign;
         this.progressBarObj = new mProgressBar(act);
+        userRequestModel.setConstantAssign(constantAssign);
     }
 
     public void sendReqConfirmDialog() {

@@ -9,6 +9,7 @@ import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -67,7 +68,7 @@ public class MapObject {
         return 0;
     }
 
-    public void animateMarker(final Marker marker, final LatLng toPosition,
+    /*public void animateMarker(final Marker marker, final LatLng toPosition,
                               final boolean hideMarker) {
         final Handler handler = new Handler();
         final long start = SystemClock.uptimeMillis();
@@ -102,5 +103,5 @@ public class MapObject {
                 }
             }
         });
-    }
+    }*/
 }

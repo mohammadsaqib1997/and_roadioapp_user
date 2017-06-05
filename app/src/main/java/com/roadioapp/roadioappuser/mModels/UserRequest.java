@@ -20,6 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
@@ -34,31 +35,54 @@ public class UserRequest {
     private DatabaseReference requestLiveCollection, requestActiveCollection, requestCollection;
     private StorageReference parcelImagesRef, parcelImgThmbRef;
 
-    private Context context;
+    private Activity activity;
 
     //objects
     private ConstantAssign constantAssign;
 
-    public UserRequest(Context ctx, ConstantAssign constantAssign){
-        this.context = ctx;
+    public UserRequest(Activity activity){
+        this.activity = activity;
 
-        this.constantAssign = constantAssign;
+
 
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() != null){
             authUID = mAuth.getCurrentUser().getUid();
         }
-        requestLiveCollection = FirebaseDatabase.getInstance().getReference().child("user_live_requests");
-        requestActiveCollection = FirebaseDatabase.getInstance().getReference().child("user_active_requests");
-        requestCollection = FirebaseDatabase.getInstance().getReference().child("user_requests");
+        DatabaseReference dbReference = FirebaseDatabase.getInstance().getReference();
+        requestLiveCollection = dbReference.child("user_live_requests");
+        requestActiveCollection = dbReference.child("user_active_requests");
+        requestCollection = dbReference.child("user_requests");
 
         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
         parcelImagesRef = storageRef.child("parcel_images");
         parcelImgThmbRef = storageRef.child("parcel_thumbs");
     }
 
+    public void setConstantAssign(ConstantAssign constantAssign){
+        this.constantAssign = constantAssign;
+    }
+
     private boolean uidExist(){
         return authUID != null;
+    }
+
+    public void getUserRequestByReqID(String ID, final DBCallbacks.CompleteDSListener callback){
+        requestCollection.child(authUID).child(ID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    callback.onSuccess(true, "", dataSnapshot);
+                }else{
+                    callback.onSuccess(false, "Data Not Found!", null);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                callback.onSuccess(false, databaseError.getMessage(), null);
+            }
+        });
     }
 
     public void postReqParcel(final ObjectInterfaces.SimpleCallback callbacks){

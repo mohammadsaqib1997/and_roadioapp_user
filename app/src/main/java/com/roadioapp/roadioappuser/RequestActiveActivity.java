@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -16,19 +17,24 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.firebase.database.DataSnapshot;
+import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
 import com.roadioapp.roadioappuser.mModels.UserInfo;
 import com.roadioapp.roadioappuser.mModels.UserRequest;
 import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
+import com.roadioapp.roadioappuser.mObjects.GPSObject;
+import com.roadioapp.roadioappuser.mObjects.MapObjectTwo;
 import com.roadioapp.roadioappuser.mObjects.PermissionCheckObj;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
 
@@ -36,12 +42,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class RequestActiveActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class RequestActiveActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     MapFragment mapFragment;
     GoogleMap mMap;
-    ButtonEffects btnEffects;
-    mProgressBar progressBarObj;
     DateFormat formatter;
 
     LinearLayout
@@ -51,19 +55,26 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             contactDBtn,
             subRatingBtn,
             ratingCon,
-            star_rating_con;
+            star_rating_con,
+            setCurLocBtn;
     TextView complete_time_TV, active_time_TV;
 
     UserActiveRequest userActiveRequestModel;
     UserInfo userInfoModel;
+    UserRequest userRequestModel;
 
     String[] statusArr;
     int saveStars = 0;
     long active_time = 0, complete_time = 0;
     boolean firstRes = true;
-    String reqDriverMob = "", reqDriverUID = "";
+    String reqDriverMob = "";
+
+    ButtonEffects btnEffects;
+    mProgressBar progressBarObj;
 
     PermissionCheckObj permissionCheckObj;
+    GPSObject gpsObj;
+    MapObjectTwo mapObj;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,22 +85,33 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
 
     }
 
-    private void setProperties(){
+    private void setProperties() {
         formatter = new SimpleDateFormat("dd MMM, yyyy hh:mm:ss a");
 
         statusArr = getResources().getStringArray(R.array.req_status);
         permissionCheckObj = new PermissionCheckObj(this);
         progressBarObj = new mProgressBar(this);
+        gpsObj = new GPSObject(this);
+        mapObj = new MapObjectTwo(this);
 
         userInfoModel = new UserInfo(this);
         userActiveRequestModel = new UserActiveRequest(this);
+        userRequestModel = new UserRequest(this);
 
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        /*mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);*/
 
         stsPendingCon = (LinearLayout) findViewById(R.id.sts_pending_con);
         stsActiveCon = (LinearLayout) findViewById(R.id.sts_active_con);
         stsCompleteCon = (LinearLayout) findViewById(R.id.sts_complete_con);
+
+        setCurLocBtn = (LinearLayout) findViewById(R.id.setCurLocBtn);
+        setCurLocBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         complete_time_TV = (TextView) findViewById(R.id.complete_time_TV);
         active_time_TV = (TextView) findViewById(R.id.active_time_TV);
@@ -107,22 +129,21 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         subRatingBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(saveStars > 0){
+                if (saveStars > 0) {
                     progressBarObj.showProgressDialog();
                     userActiveRequestModel.completeJob(saveStars, new ObjectInterfaces.SimpleCallback() {
                         @Override
                         public void onSuccess(boolean status, String err) {
                             progressBarObj.hideProgressDialog();
-                            if(status){
+                            if (status) {
                                 finishAffinity();
                                 startActivity(new Intent(RequestActiveActivity.this, MapActivity.class));
-                            }else{
+                            } else {
                                 Toast.makeText(RequestActiveActivity.this, err, Toast.LENGTH_SHORT).show();
                             }
-
                         }
                     });
-                }else{
+                } else {
                     Toast.makeText(RequestActiveActivity.this, "Please rate your Rider!", Toast.LENGTH_SHORT).show();
                 }
 
@@ -130,8 +151,8 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         });
 
         star_rating_con = (LinearLayout) findViewById(R.id.star_rating_con);
-        for(int i=0; i<star_rating_con.getChildCount(); i++){
-            final int ind = i+1;
+        for (int i = 0; i < star_rating_con.getChildCount(); i++) {
+            final int ind = i + 1;
             ImageView star = (ImageView) star_rating_con.getChildAt(i);
             star.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -146,24 +167,31 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         userActiveRequestModel.userActReqStatusCall(new ObjectInterfaces.UserActReqStatusCallback() {
             @Override
             public void onSuccess(boolean status, String err, DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
+                if (dataSnapshot.exists()) {
                     reset_stars();
                     saveStars = 0;
-                    reqDriverUID = dataSnapshot.child("driver_uid").getValue().toString();
+                    String reqDriverUID = dataSnapshot.child("driver_uid").getValue().toString();
                     String reqStatus = dataSnapshot.child("status").getValue().toString();
+                    final String reqID = dataSnapshot.child("req_id").getValue().toString();
                     active_time = (Long) dataSnapshot.child("active_time").getValue();
                     complete_time = (Long) dataSnapshot.child("complete_time").getValue();
                     statusChangeUI(reqStatus);
-                    if(firstRes){
+                    if (firstRes) {
                         userInfoModel.getUserInfo(reqDriverUID, new UserInfo.UserCallback() {
                             @Override
                             public void onSuccess(DataSnapshot dataSnapshot, String errMsg) {
                                 progressBarObj.hideProgressDialog();
-                                if(errMsg != null){
+                                if (errMsg != null) {
                                     Toast.makeText(RequestActiveActivity.this, errMsg, Toast.LENGTH_SHORT).show();
-                                }else{
+                                } else {
                                     reqDriverMob = userInfoModel.getMobNo();
                                 }
+                            }
+                        });
+                        userRequestModel.getUserRequestByReqID(reqID, new DBCallbacks.CompleteDSListener() {
+                            @Override
+                            public void onSuccess(boolean status, String msg, DataSnapshot dataSnapshot) {
+
                             }
                         });
                         firstRes = false;
@@ -176,11 +204,20 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
 
         btnEffects.btnEventEffRounded(contactDBtn);
         btnEffects.btnEventEffRounded(subRatingBtn);
+
+        mapObj.buildGoogleApiClient();
+        mapObj.createLocationRequest();
+        mapObj.buildLocationSettingsRequest();
+        mapObj.mGoogleApiClient.connect();
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mapObj.setMap(googleMap);
+        mapObj.setDefaultMapListner();
+        mapObj.setLocationIcon(false);
+        mapObj.setTrackingContent();
 
         try {
             boolean success = googleMap.setMapStyle(
@@ -196,87 +233,87 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
 
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
 
-        LatLng karachi = new LatLng(24.861462, 67.009939);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(karachi, 10));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mapObj.karachi, 10));
     }
 
-    private void statusChangeUI(String reqSts){
-        if(reqSts != null && reqSts.equals(statusArr[0])){
+    private void statusChangeUI(String reqSts) {
+        if (reqSts != null && reqSts.equals(statusArr[0])) {
             stsUI_inAct(stsPendingCon);
             stsUI_inAct(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
 
             setTime(active_time_TV, "00:00");
             setTime(complete_time_TV, "00:00");
-        }else if(reqSts != null && reqSts.equals(statusArr[1])){
+        } else if (reqSts != null && reqSts.equals(statusArr[1])) {
             stsUI_act(stsPendingCon);
             stsUI_inAct(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
 
             setTime(active_time_TV, "00:00");
             setTime(complete_time_TV, "00:00");
-        }else if(reqSts != null && reqSts.equals(statusArr[2])){
+        } else if (reqSts != null && reqSts.equals(statusArr[2])) {
             stsUI_act(stsPendingCon);
             stsUI_act(stsActiveCon);
             stsUI_inAct(stsCompleteCon);
 
             setTime(active_time_TV, convertDate(active_time));
             setTime(complete_time_TV, "00:00");
-        }else if(reqSts != null && reqSts.equals(statusArr[3])){
+        } else if (reqSts != null && reqSts.equals(statusArr[3])) {
             stsUI_act(stsPendingCon);
             stsUI_act(stsActiveCon);
             stsUI_act(stsCompleteCon);
 
             setTime(active_time_TV, convertDate(active_time));
             setTime(complete_time_TV, convertDate(complete_time));
-        }else{
+        } else {
             Log.e("CheckCallBacks", "Req No Status Found!");
         }
 
-        if(reqSts != null && reqSts.equals(statusArr[3])){
+        if (reqSts != null && reqSts.equals(statusArr[3])) {
             setRatingCon_act();
-        }else{
+        } else {
             setRatingCon_inAct();
         }
     }
 
-    private void stsUI_act(LinearLayout layout){
+    private void stsUI_act(LinearLayout layout) {
         layout.setAlpha(1);
         ImageView stsPenImgView = (ImageView) layout.getChildAt(0);
         stsPenImgView.setBackground(getResources().getDrawable(R.drawable.ic_success, null));
     }
 
-    private void stsUI_inAct(LinearLayout layout){
+    private void stsUI_inAct(LinearLayout layout) {
         layout.setAlpha(0.5f);
         ImageView stsImgView = (ImageView) layout.getChildAt(0);
         stsImgView.setBackground(getResources().getDrawable(R.drawable.ic_proccess, null));
     }
 
-    private void setRatingCon_act(){
+    private void setRatingCon_act() {
         ratingCon.setVisibility(View.VISIBLE);
         contactDBtn.setVisibility(View.GONE);
     }
 
-    private void setRatingCon_inAct(){
+    private void setRatingCon_inAct() {
         ratingCon.setVisibility(View.GONE);
         contactDBtn.setVisibility(View.VISIBLE);
     }
 
-    private void act_stars(final int stars){
+    private void act_stars(final int stars) {
         reset_stars();
-        for(int i=0; i<stars; i++){
+        for (int i = 0; i < stars; i++) {
             ImageView star = (ImageView) star_rating_con.getChildAt(i);
             star.setBackground(getResources().getDrawable(R.drawable.star_active, null));
         }
     }
-    private void reset_stars(){
-        for(int i=0; i<star_rating_con.getChildCount(); i++){
+
+    private void reset_stars() {
+        for (int i = 0; i < star_rating_con.getChildCount(); i++) {
             ImageView star = (ImageView) star_rating_con.getChildAt(i);
             star.setBackground(getResources().getDrawable(R.drawable.star_inactive, null));
         }
     }
 
-    private void showContactDialog(){
+    private void showContactDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.contact_dialog);
@@ -290,9 +327,9 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         callBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(permissionCheckObj.callPermissionCheck()){
+                if (permissionCheckObj.callPermissionCheck()) {
                     callDriverIntent();
-                }else{
+                } else {
                     permissionCheckObj.setCallPermission();
                 }
             }
@@ -306,24 +343,24 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
         dialog.show();
     }
 
-    public void callDriverIntent(){
+    public void callDriverIntent() {
         Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:+"+reqDriverMob));
+        callIntent.setData(Uri.parse("tel:+" + reqDriverMob));
         startActivity(callIntent);
     }
 
-    private void smsDriverIntent(){
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("sms:+"+reqDriverMob)));
+    private void smsDriverIntent() {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("sms:+" + reqDriverMob)));
     }
 
-    private void setTime(TextView tv, String text){
+    private void setTime(TextView tv, String text) {
         tv.setText(text);
     }
 
-    private String convertDate(long timestamp){
-        if(timestamp == 0){
+    private String convertDate(long timestamp) {
+        if (timestamp == 0) {
             return "00:00";
-        }else{
+        } else {
             Date date = new Date(timestamp);
             return formatter.format(date);
         }
@@ -343,5 +380,31 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        if (!mapObj.mRequestingLocationUpdates) {
+            mapObj.startLocationUpdates();
+            //userLocationObj.startTimer_AD();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(this, connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mapObj.getDeviceLocation(false, false, location, false);
+        mapObj.azimuth = location.getBearing();
     }
 }

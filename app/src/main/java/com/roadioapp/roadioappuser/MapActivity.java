@@ -52,6 +52,7 @@ import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 import com.roadioapp.roadioappuser.mObjects.CaptureImageObj;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.DirectionFuncObj;
+import com.roadioapp.roadioappuser.mObjects.GPSObject;
 import com.roadioapp.roadioappuser.mObjects.MapAndLocationObject;
 import com.roadioapp.roadioappuser.mObjects.MapObject;
 import com.roadioapp.roadioappuser.mObjects.NavigationFuncObj;
@@ -73,7 +74,6 @@ public class MapActivity extends AppCompatActivity implements
     private MapFragment mapFragment;
     private LatLng karachi, moveCamPos;
     private Location mLastKnownLocation;
-    LocationManager locationManager;
 
     // properties variable
     RelativeLayout mainActCon;
@@ -98,6 +98,7 @@ public class MapActivity extends AppCompatActivity implements
     private MapObject mMapObj;
     private MapAndLocationObject mMapLocationObj;
     private OnlineDriverObj onlineDriverObj;
+    private GPSObject gpsObj;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -251,7 +252,7 @@ public class MapActivity extends AppCompatActivity implements
 
     private void getDeviceLocation(boolean anim, final boolean defLatLng, final Location curLocation, boolean move, boolean boundMove) {
         if (permissionCheckObj.permissionCheck()) {
-            if (isGPSEnabled()) {
+            if (gpsObj.isGPSEnabled()) {
                 if(constantAssignObj.PickDesBounds != null){
                     if(boundMove){
                         mMapObj.mapMoveCam(null, constantAssignObj.PickDesBounds, false, anim);
@@ -282,24 +283,11 @@ public class MapActivity extends AppCompatActivity implements
                     }
                 }
             } else {
-                enableGPS();
+                gpsObj.enableGPS();
             }
         } else {
             permissionCheckObj.showPermissionErr();
         }
-    }
-
-    private boolean isGPSEnabled() {
-        if (locationManager == null) {
-            locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        }
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-    }
-
-    private void enableGPS() {
-        Intent sett_i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        sett_i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(sett_i);
     }
 
     @Override
@@ -450,6 +438,7 @@ public class MapActivity extends AppCompatActivity implements
         permissionCheckObj = new PermissionCheckObj(this);
         constantAssignObj = new ConstantAssign(this);
         btnEffectsObj = new ButtonEffects(this);
+        gpsObj = new GPSObject(this);
 
         mMapLocationObj = new MapAndLocationObject(this, constantAssignObj, permissionCheckObj);
 

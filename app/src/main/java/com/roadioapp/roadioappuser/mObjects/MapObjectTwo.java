@@ -24,6 +24,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.roadioapp.roadioappuser.mModels.ActiveDriver;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,101 +37,24 @@ public class MapObjectTwo {
 
     private Activity activity;
     private GoogleMap mMap;
-    private LocationSettingsRequest mLocationSettingsRequest;
 
-    public GoogleApiClient mGoogleApiClient;
-    public LocationRequest mLocationRequest;
-
-    public boolean mRequestingLocationUpdates = false;
-    public LatLng uCurrLL;
-    public float azimuth = 0f;
-    public Location mLastKnownLocation;
+    public LatLng driverLL;
     public LatLng karachi;
-    public String driverVehicle = "";
 
     private Marker orgMarker, desMarker;
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-    private boolean firstCamMov;
-    private PermissionCheckObj permissionCheckObj;
-    private GPSObject gpsObj;
 
     private Map<String, Marker> ADMarker;
     private JSONObject MarkerIcons;
-    private boolean userCurrLocIcon = true;
+
+    private ActiveDriver activeDriverData;
 
     public MapObjectTwo(Activity act){
         this.activity = act;
-        permissionCheckObj = new PermissionCheckObj(act);
-        gpsObj = new GPSObject(act);
         karachi = new LatLng(24.861462, 67.009939);
-        firstCamMov = true;
     }
 
     public void setMap(GoogleMap map){
         this.mMap = map;
-    }
-
-    public synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(activity)
-                .addApi(LocationServices.API)
-                /*.addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)*/
-                .addConnectionCallbacks((GoogleApiClient.ConnectionCallbacks) activity)
-                .addOnConnectionFailedListener((GoogleApiClient.OnConnectionFailedListener) activity)
-                .build();
-    }
-
-    public void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    public void buildLocationSettingsRequest() {
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        mLocationSettingsRequest = builder.build();
-    }
-
-    public void setLocationIcon(boolean userIcon){
-        userCurrLocIcon = userIcon;
-        mMap.setMyLocationEnabled(userIcon);
-    }
-
-    public void getDeviceLocation(boolean anim, final boolean defLatLng, final Location curLocation, boolean move) {
-        if (permissionCheckObj.permissionCheck()) {
-            if (gpsObj.isGPSEnabled()) {
-                mLastKnownLocation = (curLocation != null) ? curLocation : LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                if (mLastKnownLocation != null) {
-                    uCurrLL = new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude());
-                    if (!mMap.isMyLocationEnabled() && userCurrLocIcon) {
-                        mMap.setMyLocationEnabled(true);
-                    }
-                    if (firstCamMov && curLocation != null) {
-                        move = true;
-                        anim = true;
-                        firstCamMov = false;
-                    }
-                    if (move) {
-                        if (anim) {
-                            mapMoveCam(uCurrLL, null, anim);
-                        } else {
-                            mapMoveCam(uCurrLL, null, anim);
-                        }
-                    }
-                } else {
-                    if (defLatLng) {
-                        mapMoveCam(karachi, null, anim);
-                    }
-                }
-            } else {
-                gpsObj.enableGPS();
-            }
-        } else {
-            permissionCheckObj.showPermissionErr();
-        }
     }
 
     public void mapMoveCam(LatLng latLng, LatLngBounds latLngBounds, boolean anim) {
@@ -140,7 +65,7 @@ public class MapObjectTwo {
             } else {
                 mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, getHeightWidth("w"), 500, 100));
             }
-        } else {
+        } else if(latLng != null) {
             if (anim) {
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
             } else {
@@ -180,26 +105,28 @@ public class MapObjectTwo {
         ADMarker = new HashMap<String, Marker>();
         MarkerIcons = new JSONObject();
         try {
-            MarkerIcons.put("Bike", activity.getResources().getIdentifier("top_bike", "drawable", "com.roadioapp.roadioapp"));
-            MarkerIcons.put("Car", activity.getResources().getIdentifier("top_car", "drawable", "com.roadioapp.roadioapp"));
-            MarkerIcons.put("Pickup", activity.getResources().getIdentifier("top_van", "drawable", "com.roadioapp.roadioapp"));
-            MarkerIcons.put("Truck", activity.getResources().getIdentifier("top_truck", "drawable", "com.roadioapp.roadioapp"));
+            MarkerIcons.put("Bike", activity.getResources().getIdentifier("top_bike", "drawable", "com.roadioapp.roadioappuser"));
+            MarkerIcons.put("Car", activity.getResources().getIdentifier("top_car", "drawable", "com.roadioapp.roadioappuser"));
+            MarkerIcons.put("Pickup", activity.getResources().getIdentifier("top_van", "drawable", "com.roadioapp.roadioappuser"));
+            MarkerIcons.put("Truck", activity.getResources().getIdentifier("top_truck", "drawable", "com.roadioapp.roadioappuser"));
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    public void setDriverMarker(String UID){
-        if(uCurrLL != null){
+    public void setDriverMarker(DataSnapshot dataSnapshot, String key, String driverVehicle){
+        if(dataSnapshot != null){
+            activeDriverData = dataSnapshot.getValue(ActiveDriver.class);
+            driverLL = new LatLng(activeDriverData.lat, activeDriverData.lng);
             Marker marker;
-            if(ADMarker.containsKey(UID)){
-                marker = ADMarker.get(UID);
-                marker.setPosition(uCurrLL);
-                marker.setRotation(azimuth);
+            if(ADMarker.containsKey(key)){
+                marker = ADMarker.get(key);
+                marker.setPosition(driverLL);
+                marker.setRotation(activeDriverData.direction);
             }else{
                 MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(uCurrLL);
-                markerOptions.flat(true).anchor(0.5f, 0.5f).rotation(azimuth);
+                markerOptions.position(driverLL);
+                markerOptions.flat(true).anchor(0.5f, 0.5f).rotation(activeDriverData.direction);
                 try {
                     markerOptions.icon(BitmapDescriptorFactory.fromResource((int) MarkerIcons.get(driverVehicle)));
                 } catch (JSONException e) {
@@ -207,14 +134,16 @@ public class MapObjectTwo {
                 }
                 marker = mMap.addMarker(markerOptions);
             }
-            ADMarker.put(UID, marker);
+            ADMarker.put(key, marker);
         }
     }
 
     public void removeDriverMarker(String UID){
-        Marker marker = ADMarker.get(UID);
-        marker.remove();
-        ADMarker.remove(UID);
+        if(ADMarker.containsKey(UID)){
+            Marker marker = ADMarker.get(UID);
+            marker.remove();
+            ADMarker.remove(UID);
+        }
     }
 
     public void setOrgMarker(LatLng latLng){
@@ -223,7 +152,7 @@ public class MapObjectTwo {
         }else{
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(activity.getResources().getIdentifier("ic_location_pin", "drawable", "com.roadioapp.roadioapp")));
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(activity.getResources().getIdentifier("ic_move_pin", "drawable", "com.roadioapp.roadioappuser")));
             orgMarker = mMap.addMarker(markerOptions);
         }
     }
@@ -234,24 +163,27 @@ public class MapObjectTwo {
         }else{
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(activity.getResources().getIdentifier("ic_cur_loc_dark", "drawable", "com.roadioapp.roadioapp")));
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(activity.getResources().getIdentifier("ic_cur_loc_dark", "drawable", "com.roadioapp.roadioappuser")));
             desMarker = mMap.addMarker(markerOptions);
         }
     }
 
-    public void startLocationUpdates() {
-        if (permissionCheckObj.permissionCheck()) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, (LocationListener) activity);
-            mRequestingLocationUpdates = true;
+    public LatLng getOrgLL(){
+        if(orgMarker != null){
+            return orgMarker.getPosition();
         }
-
+        return null;
     }
 
-    public void stopLocationUpdates() {
-        if (mRequestingLocationUpdates) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, (LocationListener) activity);
-            mRequestingLocationUpdates = false;
+    public LatLng getDesLL(){
+        if(desMarker != null){
+            return desMarker.getPosition();
         }
+        return null;
+    }
+
+    public boolean isSetOD_LL(){
+        return orgMarker != null && desMarker != null;
     }
 
     /*public void animateMarker(final Marker marker, final LatLng toPosition,

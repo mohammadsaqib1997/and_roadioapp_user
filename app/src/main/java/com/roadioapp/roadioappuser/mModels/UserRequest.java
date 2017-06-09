@@ -22,6 +22,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
+import com.roadioapp.roadioappuser.mObjects.AuthObj;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
 
@@ -30,25 +31,27 @@ import java.util.Map;
 
 public class UserRequest {
 
-    private FirebaseAuth mAuth;
-    private String authUID;
+    public String desLat, desLng, desText, disText, durText, id, orgLat, orgLng, orgText, parcelThmb, parcelUri, vecType;
+
+    public long createdAt;
+
     private DatabaseReference requestLiveCollection, requestActiveCollection, requestCollection;
     private StorageReference parcelImagesRef, parcelImgThmbRef;
 
     private Activity activity;
+    private AuthObj authObj;
 
     //objects
     private ConstantAssign constantAssign;
 
+    public UserRequest() {
+
+    }
+
     public UserRequest(Activity activity){
         this.activity = activity;
+        this.authObj = new AuthObj(activity);
 
-
-
-        mAuth = FirebaseAuth.getInstance();
-        if(mAuth.getCurrentUser() != null){
-            authUID = mAuth.getCurrentUser().getUid();
-        }
         DatabaseReference dbReference = FirebaseDatabase.getInstance().getReference();
         requestLiveCollection = dbReference.child("user_live_requests");
         requestActiveCollection = dbReference.child("user_active_requests");
@@ -63,12 +66,8 @@ public class UserRequest {
         this.constantAssign = constantAssign;
     }
 
-    private boolean uidExist(){
-        return authUID != null;
-    }
-
     public void getUserRequestByReqID(String ID, final DBCallbacks.CompleteDSListener callback){
-        requestCollection.child(authUID).child(ID).addListenerForSingleValueEvent(new ValueEventListener() {
+        requestCollection.child(authObj.authUid).child(ID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
@@ -86,7 +85,7 @@ public class UserRequest {
     }
 
     public void postReqParcel(final ObjectInterfaces.SimpleCallback callbacks){
-        if(uidExist()){
+        if(authObj.isLoginUser()){
             final String orgLat = String.valueOf(constantAssign.LL1.latitude);
             final String orgLng = String.valueOf(constantAssign.LL1.longitude);
             final String orgText = constantAssign.pickLocCurTV.getText().toString();
@@ -140,8 +139,8 @@ public class UserRequest {
                             dataMap.put("parcelThmb", thmbDownloadUrl.toString());
                             dataMap.put("createdAt", ServerValue.TIMESTAMP);
 
-                            requestCollection.child(authUID).child(key).setValue(dataMap);
-                            requestLiveCollection.child(authUID).child("reqId").setValue(key);
+                            requestCollection.child(authObj.authUid).child(key).setValue(dataMap);
+                            requestLiveCollection.child(authObj.authUid).child("reqId").setValue(key);
                             callbacks.onSuccess(true, "");
                         }
                     });
@@ -153,8 +152,8 @@ public class UserRequest {
     }
 
     public void userLiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
-        if(uidExist()){
-            requestLiveCollection.child(authUID).addValueEventListener(new ValueEventListener() {
+        if(authObj.isLoginUser()){
+            requestLiveCollection.child(authObj.authUid).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if(dataSnapshot.exists()){
@@ -176,8 +175,8 @@ public class UserRequest {
     }
 
     public void userActiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
-        if (uidExist()) {
-            requestActiveCollection.child(authUID).addListenerForSingleValueEvent(new ValueEventListener() {
+        if (authObj.isLoginUser()) {
+            requestActiveCollection.child(authObj.authUid).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {

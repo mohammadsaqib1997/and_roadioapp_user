@@ -76,9 +76,10 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
     String[] statusArr;
     int saveStars = 0;
     long active_time = 0, complete_time = 0;
-    boolean firstRes = true, trackFirstMove = true;
+    boolean firstRes = true;
     String reqDriverMob = "";
     String reqDriverVehicle = "";
+    String reqStatus;
     List<Polyline> polylinePaths = new ArrayList<>();
 
     ButtonEffects btnEffects;
@@ -221,11 +222,10 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
                     reset_stars();
                     saveStars = 0;
                     final String reqDriverUID = dataSnapshot.child("driver_uid").getValue().toString();
-                    String reqStatus = dataSnapshot.child("status").getValue().toString();
                     final String reqID = dataSnapshot.child("req_id").getValue().toString();
+                    reqStatus = dataSnapshot.child("status").getValue().toString();
                     active_time = (Long) dataSnapshot.child("active_time").getValue();
                     complete_time = (Long) dataSnapshot.child("complete_time").getValue();
-                    statusChangeUI(reqStatus);
                     if (firstRes) {
                         userInfoModel.getUserInfo(reqDriverUID, new UserInfo.UserCallback() {
                             @Override
@@ -250,16 +250,18 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
                                     mapObj.setOrgMarker(orgLL);
                                     mapObj.setDesMarker(desLL);
                                     mapObj.mapMoveCam(null, selectedBounds.build(), false);
-                                    directionObj.retDirection(orgLL, desLL, new DBCallbacks.CompleteDirectionCall() {
+                                    //driverDirectionChange(reqStatus);
+                                    statusChangeUI(reqStatus);
+                                    /*directionObj.retDirection(orgLL, desLL, new DBCallbacks.CompleteDirectionCall() {
                                         @Override
                                         public void onSuccess(boolean status, String msg, PolylineOptions polylineOptions) {
                                             if(status){
-
+                                                polylinePaths.add(mMap.addPolyline(polylineOptions));
                                             }else{
                                                 Toast.makeText(RequestActiveActivity.this, msg, Toast.LENGTH_SHORT).show();
                                             }
                                         }
-                                    });
+                                    });*/
                                 } else {
                                     Toast.makeText(RequestActiveActivity.this, msg, Toast.LENGTH_SHORT).show();
                                 }
@@ -271,17 +273,20 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
                                 if (status) {
                                     if (dataSnapshot.exists()) {
                                         mapObj.setDriverMarker(dataSnapshot, reqDriverUID, reqDriverVehicle);
-                                        if (trackFirstMove) {
+                                        /*if (trackFirstMove && mapObj.isSetOD_LL()) {
                                             selectedBounds = new LatLngBounds.Builder();
                                             selectedBounds.include(mapObj.driverLL).include(mapObj.getOrgLL());
                                             mapObj.mapMoveCam(null, selectedBounds.build(), true);
                                             trackFirstMove = false;
-                                        }
+                                        }*/
+                                        driverDirectionChange(reqStatus, true);
                                     } else {
-                                        selectedBounds = new LatLngBounds.Builder();
-                                        selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
-                                        mapObj.mapMoveCam(null, selectedBounds.build(), true);
-                                        mapObj.removeDriverMarker(reqDriverUID);
+                                        if (mapObj.isSetOD_LL()) {
+                                            selectedBounds = new LatLngBounds.Builder();
+                                            selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
+                                            mapObj.mapMoveCam(null, selectedBounds.build(), true);
+                                            mapObj.removeDriverMarker(reqDriverUID);
+                                        }
                                     }
 
                                 } else {
@@ -290,6 +295,8 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
                             }
                         });
                         firstRes = false;
+                    }else{
+                        statusChangeUI(reqStatus);
                     }
                 }
             }
@@ -339,29 +346,76 @@ public class RequestActiveActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void updateSelectedBounds(String reqSts) {
-        if (!firstRes) {
-            if (mapObj.isSetOD_LL()) {
-                selectedBounds = new LatLngBounds.Builder();
-                boolean chk = true;
+        if (mapObj.isSetOD_LL() && reqSts != null) {
+            selectedBounds = new LatLngBounds.Builder();
+            boolean chk = true;
 
-                if (reqSts != null && reqSts.equals(statusArr[0])) {
-                    selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
+            if (reqSts.equals(statusArr[0])) {
+                selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
 
-                } else if (reqSts != null && reqSts.equals(statusArr[1])) {
-                    selectedBounds.include(mapObj.driverLL).include(mapObj.getOrgLL());
+            } else if (reqSts.equals(statusArr[1]) && mapObj.driverLL != null) {
+                selectedBounds.include(mapObj.driverLL).include(mapObj.getOrgLL());
 
-                } else if (reqSts != null && reqSts.equals(statusArr[2])) {
-                    selectedBounds.include(mapObj.driverLL).include(mapObj.getDesLL());
+            } else if (reqSts.equals(statusArr[2]) && mapObj.driverLL != null) {
+                selectedBounds.include(mapObj.driverLL).include(mapObj.getDesLL());
 
-                } else if (reqSts != null && reqSts.equals(statusArr[3])) {
-                    selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
+            } else if (reqSts.equals(statusArr[3])) {
+                selectedBounds.include(mapObj.getDesLL()).include(mapObj.getOrgLL());
 
-                } else {
-                    chk = false;
+            } else {
+                chk = false;
 
+            }
+
+            if (chk) {
+                mapObj.mapMoveCam(null, selectedBounds.build(), true);
+            }
+        }
+        driverDirectionChange(reqSts, false);
+    }
+
+    private void driverDirectionChange(String reqSts, boolean track) {
+        if (mapObj.isSetOD_LL() && reqSts != null) {
+            directionObj.resetDirection(polylinePaths);
+            //Log.e("CheckDirection", reqSts+"--"+track);
+            LatLng selLL1 = null, selLL2 = null;
+
+            if (reqSts.equals(statusArr[1])) {
+                selLL1 = mapObj.driverLL;
+                selLL2 = mapObj.getOrgLL();
+            } else if (reqSts.equals(statusArr[2])) {
+                selLL1 = mapObj.driverLL;
+                selLL2 = mapObj.getDesLL();
+            } else {
+                selLL1 = mapObj.getOrgLL();
+                selLL2 = mapObj.getDesLL();
+            }
+
+            if(reqSts.equals(statusArr[1]) || reqSts.equals(statusArr[2])){
+                if(track){
+                    directionObj.retDirection(selLL1, selLL2, new DBCallbacks.CompleteDirectionCall() {
+                        @Override
+                        public void onSuccess(boolean status, String msg, PolylineOptions polylineOptions) {
+                            if (status) {
+                                polylinePaths.add(mMap.addPolyline(polylineOptions));
+                            } else {
+                                Toast.makeText(RequestActiveActivity.this, msg, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
-                if(chk){
-                    mapObj.mapMoveCam(null, selectedBounds.build(), true);
+            }else{
+                if(!track){
+                    directionObj.retDirection(selLL1, selLL2, new DBCallbacks.CompleteDirectionCall() {
+                        @Override
+                        public void onSuccess(boolean status, String msg, PolylineOptions polylineOptions) {
+                            if (status) {
+                                polylinePaths.add(mMap.addPolyline(polylineOptions));
+                            } else {
+                                Toast.makeText(RequestActiveActivity.this, msg, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
             }
         }

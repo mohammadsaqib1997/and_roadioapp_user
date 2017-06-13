@@ -15,6 +15,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
@@ -95,6 +96,14 @@ public class DirectionObject {
             directionAPIReq.add(stringReqData);
         }else{
             callback.onSuccess(false, "Invalid LatLng!", null);
+        }
+    }
+
+    public void resetDirection(List<Polyline> polylinePaths){
+        if(polylinePaths != null){
+            for (Polyline polyline: polylinePaths ) {
+                polyline.remove();
+            }
         }
     }
 

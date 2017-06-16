@@ -36,5 +36,6 @@
         <item>req.active</item>
         <item>req.complete</item>
     </array>
+    <string name="title_activity_setting">Settings</string>
 
 </resources>

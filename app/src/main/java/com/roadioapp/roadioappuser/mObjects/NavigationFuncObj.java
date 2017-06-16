@@ -1,25 +1,35 @@
 package com.roadioapp.roadioappuser.mObjects;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Toast;
+
+import com.roadioapp.roadioappuser.SettingActivity;
+import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
+import com.roadioapp.roadioappuser.mModels.UserInfo;
 
 public class NavigationFuncObj {
 
-    private Context context;
+    private Activity activity;
     private ConstantAssign constantAssignObj;
     private RequestParcelObj requestParcelObj;
     private AuthObj mAuthObj;
     private boolean drawerState = false;
 
-    public NavigationFuncObj(Context ctx, ConstantAssign constantAssign, RequestParcelObj requestParcelObj, AuthObj authObj){
-        this.context = ctx;
+    private UserInfo userInfoModel;
+
+    public NavigationFuncObj(Activity activity, ConstantAssign constantAssign, RequestParcelObj requestParcelObj, AuthObj authObj){
+        this.activity = activity;
         this.constantAssignObj = constantAssign;
         this.requestParcelObj = requestParcelObj;
         this.mAuthObj = authObj;
+        this.userInfoModel = new UserInfo(activity);
     }
 
     public void assignNavigationFunc(){
@@ -81,10 +91,26 @@ public class NavigationFuncObj {
                 confirmDialog();
             }
         });
+        userInfoModel.getMyInfo(new DBCallbacks.CompleteListener() {
+            @Override
+            public void onSuccess(boolean status, String msg) {
+                if(status){
+                    constantAssignObj.smUsernameTV.setText(userInfoModel.first_name+" "+userInfoModel.last_name);
+                }else{
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        constantAssignObj.smSettingBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.startActivity(new Intent(activity, SettingActivity.class));
+            }
+        });
     }
 
     private void confirmDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setCancelable(false);
         builder.setMessage("Are you sure! You want to Logout!");
         builder.setPositiveButton("Logout", new DialogInterface.OnClickListener() {

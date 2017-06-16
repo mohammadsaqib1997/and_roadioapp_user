@@ -25,9 +25,9 @@ public class ConstantAssign {
     public static final int PERM_REQUEST_STORAGE = 300;
 
 
-    public TextView pickLocCurTV, pickLocDesTV, sendBtnText, estDistance, estTime;
+    public TextView pickLocCurTV, pickLocDesTV, sendBtnText, estDistance, estTime, smUsernameTV;
     public LinearLayout sendBtn, estCon, sendReqBtn;
-    public ImageView navMenuIcon, desLocClearBtn, logOutBtn, curPinMovable;
+    public ImageView navMenuIcon, desLocClearBtn, logOutBtn, curPinMovable, smSettingBtn;
     public DrawerLayout drawer_layout;
     public Marker pickLocMarker, desLocMarker;
 
@@ -68,6 +68,8 @@ public class ConstantAssign {
 
         NavigationView navView = (NavigationView) drawer_layout.findViewById(R.id.nav_view);
         logOutBtn = (ImageView) navView.findViewById(R.id.logoutBtn);
+        smUsernameTV = (TextView) navView.findViewById(R.id.usernameSBar);
+        smSettingBtn = (ImageView) navView.findViewById(R.id.settingBtn);
 
         estDistance = (TextView) activity.findViewById(R.id.estDistance);
         estTime = (TextView) activity.findViewById(R.id.estTime);

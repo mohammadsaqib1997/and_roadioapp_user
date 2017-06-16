@@ -1,14 +1,14 @@
 package com.roadioapp.roadioappuser.mModels;
 
 import android.app.Activity;
-import android.content.Context;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
+import com.roadioapp.roadioappuser.mObjects.AuthObj;
 
 public class UserInfo {
 
@@ -16,6 +16,7 @@ public class UserInfo {
 
     //here program variables
     private DatabaseReference userCollection;
+    private AuthObj authObj;
 
     public UserInfo(){
 
@@ -23,6 +24,7 @@ public class UserInfo {
 
     public UserInfo(Activity activity){
         userCollection = FirebaseDatabase.getInstance().getReference().child("users");
+        authObj = new AuthObj(activity);
     }
 
     public void getUserInfo(String uid, final UserCallback callback){
@@ -40,6 +42,21 @@ public class UserInfo {
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 callback.onSuccess(null, databaseError.getMessage());
+            }
+        });
+    }
+
+    public void getMyInfo(final DBCallbacks.CompleteListener callback){
+        userCollection.child(authObj.authUid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                initValue(dataSnapshot.getValue(UserInfo.class));
+                callback.onSuccess(true, "");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                callback.onSuccess(false, databaseError.getMessage());
             }
         });
     }

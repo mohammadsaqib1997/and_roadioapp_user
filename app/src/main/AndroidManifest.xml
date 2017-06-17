@@ -70,12 +70,7 @@
             android:theme="@style/NoActionBar" />
         <activity
             android:name=".SettingActivity"
-            android:label="@string/title_activity_setting"
-            android:parentActivityName=".MapActivity"
             android:theme="@style/NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.roadioapp.roadioappuser.MapActivity" />
         </activity>
     </application>
 

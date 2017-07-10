@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">RoadioAppUser</string>
     <!--<string name="app_api_domain">http://178.62.103.189/api/index.php/</string>-->
-    <string name="app_api_domain">http://107.170.74.248:4000/api</string>
+    <string name="app_api_domain">http://roadioapp.com/api</string>
 
 
     <string name="confirmation_msg_1">
@@ -20,13 +20,6 @@
     <string name="confirm_req_msg">Are you sure you want to\nsend a parcel?</string>
     <string name="confirm_bid_msg">Are you sure\nYou want to bid now?</string>
     <string name="success_req_msg">Your request has been send to\nthe riders!</string>
-
-    <string name="FIXED_CHARGES_SMALL">5.00</string>
-    <string name="FIXED_CHARGES_MEDIUM">7.00</string>
-    <string name="FIXED_CHARGES_LARGE">10.00</string>
-    <string name="FIXED_CHARGES_EXTRA_LARGE">15.00</string>
-
-    <string name="INSURANCE">1.00</string>
 
     <string name="forgotPassword">Forgot your Password?</string>
 

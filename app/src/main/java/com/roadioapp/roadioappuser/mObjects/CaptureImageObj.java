@@ -14,8 +14,6 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.roadioapp.roadioappuser.MapActivity;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;

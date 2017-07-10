@@ -68,6 +68,7 @@
             </RelativeLayout>
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/dialog_btn_nameUpd"
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
             android:orientation="horizontal"
@@ -99,6 +100,7 @@
             </RelativeLayout>
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/dialog_btn_profileImgUpd"
             android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
             android:orientation="horizontal"

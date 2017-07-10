@@ -72,7 +72,8 @@ public class MapActivity extends AppCompatActivity implements
         OnMapReadyCallback, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private MapFragment mapFragment;
-    private LatLng karachi, moveCamPos;
+    private LatLng karachi = new LatLng(24.861462, 67.009939);
+    private LatLng moveCamPos;
     private Location mLastKnownLocation;
 
     // properties variable
@@ -212,9 +213,7 @@ public class MapActivity extends AppCompatActivity implements
 
         constantAssignObj.mMap.getUiSettings().setMyLocationButtonEnabled(false);
 
-        karachi = new LatLng(24.861462, 67.009939);
         constantAssignObj.mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(karachi, 10));
-
         constantAssignObj.mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
             @Override
             public void onCameraMoveStarted(int reason) {

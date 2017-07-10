@@ -10,6 +10,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mObjects.AuthObj;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserInfo {
 
     public String first_name, last_name, vehicle, mob_no;
@@ -66,6 +69,30 @@ public class UserInfo {
         last_name = userInfo.last_name;
         vehicle = userInfo.vehicle;
         mob_no = userInfo.mob_no;
+    }
+
+    public String getFirstName(){
+        return first_name;
+    }
+
+    public String getLastName(){
+        return last_name;
+    }
+
+    public void setMyName(String first_name, String last_name, final DBCallbacks.CompleteListener callback){
+        Map<String, Object> dataMap = new HashMap<String, Object>();
+        dataMap.put("first_name", first_name);
+        dataMap.put("last_name", last_name);
+        userCollection.child(authObj.authUid).updateChildren(dataMap, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if(databaseError != null){
+                    callback.onSuccess(false, databaseError.getMessage());
+                }else{
+                    callback.onSuccess(true, "");
+                }
+            }
+        });
     }
 
     public String fullName(){

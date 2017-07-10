@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.2"
+    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "com.roadioapp.roadioappuser"
         minSdkVersion 17
@@ -26,7 +26,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:multidex:1.0.1'
-    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:support-v4:24.2.1'
     compile 'com.android.volley:volley:1.0.0'
@@ -35,7 +35,8 @@ dependencies {
     compile 'com.google.firebase:firebase-database:9.8.0'
     compile 'com.google.firebase:firebase-auth:9.8.0'
     compile 'com.google.firebase:firebase-storage:9.8.0'
-    compile 'com.android.support:recyclerview-v7:24.2.+'
+    compile 'com.android.support:recyclerview-v7:24.2.1'
+    compile 'com.squareup.picasso:picasso:2.5.2'
     testCompile 'junit:junit:4.12'
 }
 apply plugin: 'com.google.gms.google-services'

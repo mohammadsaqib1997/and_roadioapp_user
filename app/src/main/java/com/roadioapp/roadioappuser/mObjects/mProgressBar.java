@@ -1,16 +1,15 @@
 package com.roadioapp.roadioappuser.mObjects;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 
 public class mProgressBar {
 
-    //private Context context;
     private ProgressDialog progressDialog;
 
-    public mProgressBar(Context ctx){
-        //this.context = ctx;
-        progressDialog = new ProgressDialog(ctx);
+    public mProgressBar(Activity activity){
+        progressDialog = new ProgressDialog(activity);
     }
 
     public void showProgressDialog() {

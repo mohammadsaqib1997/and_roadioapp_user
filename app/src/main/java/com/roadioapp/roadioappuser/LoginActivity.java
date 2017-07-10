@@ -48,7 +48,7 @@ public class LoginActivity extends AppCompatActivity implements
 
     private FirebaseAuth mAuth;
 
-    private FirebaseAuth.AuthStateListener mAuthListener;
+//    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -79,13 +79,13 @@ public class LoginActivity extends AppCompatActivity implements
 
         mAuth = FirebaseAuth.getInstance();
 
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
+        /*mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 updateUI(user);
             }
-        };
+        };*/
     }
 
     @Override
@@ -95,17 +95,22 @@ public class LoginActivity extends AppCompatActivity implements
         if(checkSession.isValidate()){
             finish();
             startActivity(new Intent(this, BasicInfo.class));
-        }else{
-            mAuth.addAuthStateListener(mAuthListener);
+        }else if(mAuth.getCurrentUser() != null){
+            finish();
+            startActivity(new Intent(this, MapActivity.class));
         }
+
+        /*else{
+            //mAuth.addAuthStateListener(mAuthListener);
+        }*/
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (mAuthListener != null) {
+        /*if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
-        }
+        }*/
     }
 
     private void updateUI(FirebaseUser user) {
@@ -133,7 +138,6 @@ public class LoginActivity extends AppCompatActivity implements
         String password = mPasswordField.getText().toString();
 
         if(TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-
             Toast.makeText(LoginActivity.this, "Email & password is required.", Toast.LENGTH_LONG).show();
         } else {
             keyboardHide();
@@ -164,8 +168,11 @@ public class LoginActivity extends AppCompatActivity implements
                                 public void onComplete(@NonNull Task<AuthResult> task) {
                                     hideProgressDialog();
                                     if (!task.isSuccessful()) {
+                                        Log.e("LoginError", task.getException().getMessage());
                                         Toast.makeText(LoginActivity.this, task.getException().getMessage()+"",
                                                 Toast.LENGTH_SHORT).show();
+                                    }else{
+                                        updateUI(mAuth.getCurrentUser());
                                     }
                                 }
                             });

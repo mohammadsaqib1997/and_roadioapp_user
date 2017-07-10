@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/RoadioAppUser.iml" filepath="$PROJECT_DIR$/RoadioAppUser.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/roadioapp_user_android.iml" filepath="$PROJECT_DIR$/roadioapp_user_android.iml" />
     </modules>
   </component>
 </project>

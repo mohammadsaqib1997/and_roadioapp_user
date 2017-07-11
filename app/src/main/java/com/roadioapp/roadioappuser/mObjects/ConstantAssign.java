@@ -26,7 +26,7 @@ public class ConstantAssign {
 
 
     public TextView pickLocCurTV, pickLocDesTV, sendBtnText, estDistance, estTime, smUsernameTV;
-    public LinearLayout sendBtn, estCon, sendReqBtn;
+    public LinearLayout sendBtn, estCon, sendReqBtn, smListCont;
     public ImageView navMenuIcon, desLocClearBtn, logOutBtn, curPinMovable, smSettingBtn;
     public DrawerLayout drawer_layout;
     public Marker pickLocMarker, desLocMarker;
@@ -70,6 +70,7 @@ public class ConstantAssign {
         logOutBtn = (ImageView) navView.findViewById(R.id.logoutBtn);
         smUsernameTV = (TextView) navView.findViewById(R.id.usernameSBar);
         smSettingBtn = (ImageView) navView.findViewById(R.id.settingBtn);
+        smListCont = (LinearLayout) navView.findViewById(R.id.smListCont);
 
         estDistance = (TextView) activity.findViewById(R.id.estDistance);
         estTime = (TextView) activity.findViewById(R.id.estTime);

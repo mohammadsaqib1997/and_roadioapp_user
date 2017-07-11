@@ -26,6 +26,8 @@ import com.roadioapp.roadioappuser.mObjects.AuthObj;
 import com.roadioapp.roadioappuser.mObjects.ConstantAssign;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -194,6 +196,12 @@ public class UserRequest {
         }else{
             callbacks.onSuccess(false, "Auth Not Found!");
         }
+    }
+
+    public String getFormatDate(){
+        Date date = new Date(createdAt);
+        String newstring = new SimpleDateFormat("d MMM yyyy, hh:mm a").format(date);
+        return newstring;
     }
 
 }

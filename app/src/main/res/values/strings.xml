@@ -18,7 +18,7 @@
     <string name="google_url_key">AIzaSyBolC4x_OuWyBxj4RJEvMlqaQUonJHzej0</string>
 
     <string name="confirm_req_msg">Are you sure you want to\nsend a parcel?</string>
-    <string name="confirm_bid_msg">Are you sure\nYou want to bid now?</string>
+    <string name="confirm_bid_msg">Are you sure\nYou want to confirm bid?</string>
     <string name="success_req_msg">Your request has been send to\nthe riders!</string>
 
     <string name="forgotPassword">Forgot your Password?</string>

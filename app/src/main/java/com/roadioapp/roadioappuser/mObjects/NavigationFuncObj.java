@@ -6,10 +6,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.roadioapp.roadioappuser.MyDeliveriesActivity;
+import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.SettingActivity;
 import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mModels.UserInfo;
@@ -107,6 +111,20 @@ public class NavigationFuncObj {
                 activity.startActivity(new Intent(activity, SettingActivity.class));
             }
         });
+
+        for(int i = 0; i < constantAssignObj.smListCont.getChildCount(); i++){
+            LinearLayout ListItem = (LinearLayout) constantAssignObj.smListCont.getChildAt(i);
+            ListItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(view.getId() == R.id.myDeliveriesBtn){
+                        activity.startActivity(new Intent(activity, MyDeliveriesActivity.class));
+                    }else{
+                        Toast.makeText(activity, "Coming Soon!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
     }
 
     private void confirmDialog() {

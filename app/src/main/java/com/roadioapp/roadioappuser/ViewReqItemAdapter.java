@@ -1,51 +1,42 @@
 package com.roadioapp.roadioappuser;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
-import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
-import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
+import com.roadioapp.roadioappuser.transforms.CircleTransform;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class ViewReqItemAdapter extends RecyclerView.Adapter<ViewReqItemAdapter.ViewHolder> {
 
-    private LinkedHashMap<String, HashMap> saveData;
+    private LinkedHashMap<String, LinkedHashMap> saveData;
     private Activity activity;
 
     private String reqId;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView orgTV, desTV, timeTV;
-        /*public TextView title, vehicle_type, bidAmount;
-        public LinearLayout list_item;*/
+        public TextView orgTV, desTV, timeTV, amountTV, reqStatusTV;
+        public ImageView parcelImgThb;
 
         public ViewHolder(View v) {
             super(v);
             orgTV = (TextView) v.findViewById(R.id.orgTV);
             desTV = (TextView) v.findViewById(R.id.desTV);
             timeTV = (TextView) v.findViewById(R.id.timeTV);
-            /*list_item = (LinearLayout) v.findViewById(R.id.list_item);
-            title = (TextView) v.findViewById(R.id.title);
-            vehicle_type = (TextView) v.findViewById(R.id.vehicle_type);
-            bidAmount = (TextView) v.findViewById(R.id.bidAmount);*/
+            amountTV = (TextView) v.findViewById(R.id.amountTV);
+            reqStatusTV = (TextView) v.findViewById(R.id.reqStatusTV);
+            parcelImgThb = (ImageView) v.findViewById(R.id.parcelImgThb);
         }
     }
 
-    public ViewReqItemAdapter(Activity mAct, LinkedHashMap<String, HashMap> dataSet) {
+    public ViewReqItemAdapter(Activity mAct, LinkedHashMap<String, LinkedHashMap> dataSet) {
         this.saveData = dataSet;
         this.activity = mAct;
     }
@@ -63,18 +54,10 @@ public class ViewReqItemAdapter extends RecyclerView.Adapter<ViewReqItemAdapter.
         holder.orgTV.setText(data.get("origin")+"");
         holder.desTV.setText(data.get("destination")+"");
         holder.timeTV.setText(data.get("time")+"");
+        holder.amountTV.setText("PKR "+data.get("amount"));
+        holder.reqStatusTV.setText(""+data.get("status"));
 
-        /*final HashMap data = (new ArrayList<HashMap>(saveData.values())).get(position);
-        holder.title.setText(""+data.get("username"));
-        holder.vehicle_type.setText("Vehicle: " + data.get("user_vehicle"));
-        holder.bidAmount.setText("PKR " + data.get("amount"));
-
-        holder.list_item.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(activity, "Check", Toast.LENGTH_SHORT).show();
-            }
-        });*/
+        Picasso.with(activity).load(data.get("parcel_thumb")+"").placeholder(R.drawable.circle_img).transform(new CircleTransform()).into(holder.parcelImgThb);
     }
 
     @Override

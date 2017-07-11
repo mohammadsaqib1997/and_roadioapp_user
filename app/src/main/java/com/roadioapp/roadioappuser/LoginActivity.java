@@ -44,11 +44,9 @@ public class LoginActivity extends AppCompatActivity implements
     private EditText mPasswordField;
 
     private LinearLayout loginBtn;
-    private TextView loginBtnText;
+    private TextView loginBtnText, forgotPassword;
 
     private FirebaseAuth mAuth;
-
-//    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,6 +67,9 @@ public class LoginActivity extends AppCompatActivity implements
         loginBtn.setOnClickListener(this);
         loginBtn.setOnTouchListener(this);
 
+        forgotPassword = (TextView) findViewById(R.id.forgotPassword);
+        forgotPassword.setOnClickListener(this);
+
         findViewById(R.id.signUpLink).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,13 +80,7 @@ public class LoginActivity extends AppCompatActivity implements
 
         mAuth = FirebaseAuth.getInstance();
 
-        /*mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                updateUI(user);
-            }
-        };*/
+
     }
 
     @Override
@@ -99,18 +94,6 @@ public class LoginActivity extends AppCompatActivity implements
             finish();
             startActivity(new Intent(this, MapActivity.class));
         }
-
-        /*else{
-            //mAuth.addAuthStateListener(mAuthListener);
-        }*/
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        /*if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }*/
     }
 
     private void updateUI(FirebaseUser user) {
@@ -129,6 +112,9 @@ public class LoginActivity extends AppCompatActivity implements
         int i = v.getId();
         if (i == R.id.loginBtn) {
             startSignIn();
+        }else if(i == R.id.forgotPassword){
+            finish();
+            startActivity(new Intent(this, ForgotPasswordActivity.class));
         }
     }
 

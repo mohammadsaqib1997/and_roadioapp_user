@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -12,11 +14,18 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.roadioapp.roadioappuser.MyDeliveriesActivity;
 import com.roadioapp.roadioappuser.R;
 import com.roadioapp.roadioappuser.SettingActivity;
 import com.roadioapp.roadioappuser.mInterfaces.DBCallbacks;
 import com.roadioapp.roadioappuser.mModels.UserInfo;
+import com.roadioapp.roadioappuser.transforms.CircleTransform;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 public class NavigationFuncObj {
 
@@ -24,6 +33,7 @@ public class NavigationFuncObj {
     private ConstantAssign constantAssignObj;
     private RequestParcelObj requestParcelObj;
     private AuthObj mAuthObj;
+    private StorageReference mProfileImageRef;
     private boolean drawerState = false;
 
     private UserInfo userInfoModel;
@@ -34,6 +44,7 @@ public class NavigationFuncObj {
         this.requestParcelObj = requestParcelObj;
         this.mAuthObj = authObj;
         this.userInfoModel = new UserInfo(activity);
+        mProfileImageRef = FirebaseStorage.getInstance().getReference().child("profile_images");
     }
 
     public void assignNavigationFunc(){
@@ -105,6 +116,15 @@ public class NavigationFuncObj {
                 }
             }
         });
+        mProfileImageRef.child(mAuthObj.authUid+".jpg").getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if(task.isSuccessful()){
+                    Picasso.with(activity).load(task.getResult()).placeholder(R.drawable.circle_img).transform(new CircleTransform()).into(constantAssignObj.userProfileImg);
+                }
+            }
+        });
+
         constantAssignObj.smSettingBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

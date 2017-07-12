@@ -22,6 +22,7 @@
     <string name="success_req_msg">Your request has been send to\nthe riders!</string>
 
     <string name="forgotPassword">Forgot your Password?</string>
+    <string name="forgotPasswordText">Please enter your phone number to search for your account.</string>
 
     <array name="req_status">
         <item>req.pending</item>

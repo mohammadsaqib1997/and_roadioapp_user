@@ -9,10 +9,12 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +48,7 @@ public class SignupActivity extends AppCompatActivity implements
 
     private LinearLayout signUpBtn;
     private TextView signUpBtnText;
+    private ImageView back_to_signin;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,13 @@ public class SignupActivity extends AppCompatActivity implements
 
         DOMAIN = getString(R.string.app_api_domain);
 
+        back_to_signin = (ImageView) findViewById(R.id.back_to_signin);
+        back_to_signin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchAct(WelcomeActivity.class);
+            }
+        });
 
         mMobileNum = (EditText) findViewById(R.id.mobNumber);
         mPassword = (EditText) findViewById(R.id.password);
@@ -70,8 +80,7 @@ public class SignupActivity extends AppCompatActivity implements
         findViewById(R.id.loginLink).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
-                startActivity(new Intent(SignupActivity.this, LoginActivity.class));
+                switchAct(LoginActivity.class);
             }
         });
 
@@ -136,8 +145,7 @@ public class SignupActivity extends AppCompatActivity implements
                         SessionManager saveUserInfo = new SessionManager(SignupActivity.this);
                         saveUserInfo.setRegPref(token, mobNumber);
                         saveUserInfo.saveUserTamp(pass, mobNumber);
-                        Intent moveInboxIntent = new Intent(SignupActivity.this, ConfirmCode.class);
-                        startActivity(moveInboxIntent);
+                        switchAct(ConfirmCode.class);
                     }else{
                         Toast.makeText(SignupActivity.this, response.getString("message"), Toast.LENGTH_LONG).show();
                         Log.e("Response", response.toString());
@@ -198,5 +206,20 @@ public class SignupActivity extends AppCompatActivity implements
             v.setBackgroundResource(R.drawable.bg_acc_rounded);
             tv.setTextColor(Color.parseColor("#333333"));
         }
+    }
+
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            switchAct(WelcomeActivity.class);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private void switchAct(Class classname){
+        startActivity(new Intent(this, classname));
+        finish();
     }
 }

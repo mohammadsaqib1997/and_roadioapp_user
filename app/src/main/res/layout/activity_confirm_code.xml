@@ -57,6 +57,7 @@
             android:background="@color/border_bottom_color" />
 
         <TextView
+            android:visibility="gone"
             android:clickable="true"
             android:id="@+id/resendCodeTV"
             android:textAlignment="center"

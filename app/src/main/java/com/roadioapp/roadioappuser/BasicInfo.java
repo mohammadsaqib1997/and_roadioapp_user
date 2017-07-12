@@ -84,8 +84,8 @@ public class BasicInfo extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if(!sessionManager.isValidate()){
-            finish();
             startActivity(new Intent(BasicInfo.this, LoginActivity.class));
+            finish();
         }
     }
 

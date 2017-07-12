@@ -9,10 +9,12 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +47,7 @@ public class LoginActivity extends AppCompatActivity implements
 
     private LinearLayout loginBtn;
     private TextView loginBtnText, forgotPassword;
+    private ImageView back_to_signin;
 
     private FirebaseAuth mAuth;
 
@@ -56,6 +59,14 @@ public class LoginActivity extends AppCompatActivity implements
         progressDialog = new ProgressDialog(this);
 
         DOMAIN = getString(R.string.app_api_domain);
+
+        back_to_signin = (ImageView) findViewById(R.id.back_to_signin);
+        back_to_signin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchAct(WelcomeActivity.class);
+            }
+        });
 
         // Views
         mEmailField = (EditText) findViewById(R.id.email);
@@ -223,5 +234,19 @@ public class LoginActivity extends AppCompatActivity implements
             v.setBackgroundResource(R.drawable.bg_acc_rounded);
             tv.setTextColor(Color.parseColor("#333333"));
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            switchAct(WelcomeActivity.class);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private void switchAct(Class classname){
+        startActivity(new Intent(this, classname));
+        finish();
     }
 }

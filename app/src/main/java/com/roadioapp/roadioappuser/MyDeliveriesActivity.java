@@ -156,6 +156,8 @@ public class MyDeliveriesActivity extends AppCompatActivity {
                                 }
                             });
                         }
+                    }else{
+                        progressBar.setVisibility(View.GONE);
                     }
                 }
 

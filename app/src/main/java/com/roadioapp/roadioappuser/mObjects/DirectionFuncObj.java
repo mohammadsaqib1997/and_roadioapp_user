@@ -67,28 +67,41 @@ public class DirectionFuncObj {
                         String status = rData.getString("status");
                         JSONArray results = rData.getJSONArray("results");
                         if (status.equals("OK")) {
-                            JSONObject getSingleData = results.getJSONObject(0);
-                            JSONArray addressComponents = getSingleData.getJSONArray("address_components");
-                            //JSONObject firstAddName = addressComponents.getJSONObject(0);
-                            //String newLoc = firstAddName.getString("long_name");
-                            boolean route = false;
+                            boolean route, route_exist;
                             String newLoc = "Unnamed Road";
 
-                            for(int i=0; i<addressComponents.length(); i++){
-                                JSONObject singleObj = addressComponents.getJSONObject(i);
-                                JSONArray addTypes = singleObj.getJSONArray("types");
-                                for(int i2 = 0; i2<addTypes.length(); i2++){
-                                    String type = addTypes.getString(i2);
-                                    if(type.equals("route") || type.equals("establishment")) {
-                                        route = true;
+                            JSONObject getSingleData = results.getJSONObject(0);
+                            JSONArray addressComponents = getSingleData.getJSONArray("address_components");
+                            JSONObject singleObj = addressComponents.getJSONObject(0);
+                            newLoc = singleObj.getString("long_name");
+
+
+                            /*for (int main_i=0; main_i< results.length();main_i++){
+
+
+
+                                *//*for(int i=0; i<addressComponents.length(); i++){
+                                    JSONObject singleObj = addressComponents.getJSONObject(i);
+                                    JSONArray addTypes = singleObj.getJSONArray("types");
+                                    route = false;
+                                    for(int i2 = 0; i2<addTypes.length(); i2++){
+                                        String type = addTypes.getString(i2);
+                                        if(type.equals("route")) {
+                                            route = true;
+                                            break;
+                                        }
+                                    }
+                                    if(route){
+                                        newLoc = singleObj.getString("long_name");
                                         break;
                                     }
                                 }
-                                if(route){
-                                    newLoc = singleObj.getString("long_name");
+
+                                if(route_exist){
                                     break;
-                                }
-                            }
+                                }*//*
+                            }*/
+
 
                             setTVCurLoc(newLoc, null, false);
                         } else {

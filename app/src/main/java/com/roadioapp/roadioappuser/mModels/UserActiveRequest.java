@@ -24,7 +24,8 @@ public class UserActiveRequest {
     public String driver_uid, req_id, status;
     public long active_time, complete_time;
 
-    private DatabaseReference mDatabase, userActiveRequestCol, userLiveRequestCol;
+    private DatabaseReference mDatabase, userActiveRequestCol, userLiveRequestCol, userActReqSelRef;
+    private ValueEventListener userActReqListener;
     private AuthObj mAuthObj;
     private String[] statusArr;
 
@@ -76,7 +77,8 @@ public class UserActiveRequest {
 
     public void userActReqStatusCall(final ObjectInterfaces.UserActReqStatusCallback callback){
         if(mAuthObj.isLoginUser()){
-            userActiveRequestCol.child(mAuthObj.authUid).addValueEventListener(new ValueEventListener() {
+            userActReqSelRef = userActiveRequestCol.child(mAuthObj.authUid);
+            userActReqListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     callback.onSuccess(true, "", dataSnapshot);
@@ -86,9 +88,16 @@ public class UserActiveRequest {
                 public void onCancelled(DatabaseError databaseError) {
                     callback.onSuccess(false, databaseError.getMessage(), null);
                 }
-            });
+            };
+            userActReqSelRef.addValueEventListener(userActReqListener);
         }else{
             callback.onSuccess(false, "Auth Not Found!", null);
+        }
+    }
+
+    public void userActReqStatusCallRemove(){
+        if(userActReqSelRef != null && userActReqListener != null){
+            userActReqSelRef.removeEventListener(userActReqListener);
         }
     }
 

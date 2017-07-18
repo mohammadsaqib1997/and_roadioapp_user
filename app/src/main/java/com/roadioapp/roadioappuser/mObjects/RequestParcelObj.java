@@ -137,6 +137,10 @@ public class RequestParcelObj {
         });
     }
 
+    public void remLisCheckUserLiveReq(){
+        userRequestModel.remLisUserLiveReqCheck();
+    }
+
     public void checkUserActiveRequest(){
         progressBarObj.showProgressDialog();
         userRequestModel.userActiveRequestCheck(new ObjectInterfaces.SimpleCallback() {

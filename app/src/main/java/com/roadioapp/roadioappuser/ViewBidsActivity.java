@@ -53,4 +53,10 @@ public class ViewBidsActivity extends Activity {
             }
         });
     }
+
+    @Override
+    protected void onDestroy() {
+        requestBidsObj.removeBidListener();
+        super.onDestroy();
+    }
 }

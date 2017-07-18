@@ -23,7 +23,8 @@ import java.util.HashMap;
 
 public class RequestBidsObj {
 
-    private DatabaseReference userLiveRequestCollection, driverBidsCollection;
+    private DatabaseReference userLiveRequestCollection, driverBidsCollection, driverBidsCollectionChildRef;
+    private ChildEventListener bidChildListener;
 
     private AuthObj mAuthObj;
     private UserInfo userInfo2;
@@ -74,7 +75,8 @@ public class RequestBidsObj {
                     if(dataSnapshot.exists()){
                         final String reqID = dataSnapshot.child("reqId").getValue()+"";
                         vbAdapter.setReqId(reqID);
-                        driverBidsCollection.child(reqID).addChildEventListener(new ChildEventListener() {
+                        driverBidsCollectionChildRef = driverBidsCollection.child(reqID);
+                        bidChildListener = new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                                 bidUpdate(dataSnapshot);
@@ -99,7 +101,8 @@ public class RequestBidsObj {
                             public void onCancelled(DatabaseError databaseError) {
 
                             }
-                        });
+                        };
+                        driverBidsCollectionChildRef.addChildEventListener(bidChildListener);
                     }
                     progressBar.setVisibility(View.GONE);
                 }
@@ -146,6 +149,10 @@ public class RequestBidsObj {
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(vbAdapter);
+    }
+
+    public void removeBidListener(){
+        driverBidsCollectionChildRef.removeEventListener(bidChildListener);
     }
 
 

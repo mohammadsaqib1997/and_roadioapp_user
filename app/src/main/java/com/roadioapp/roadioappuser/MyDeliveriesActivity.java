@@ -74,9 +74,9 @@ public class MyDeliveriesActivity extends AppCompatActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.listRequestItems);
 
         mLayoutManager = new LinearLayoutManager(activity);
-        mLayoutManager.setReverseLayout(true);
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        //mLayoutManager.setReverseLayout(true);
         mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
         dataLoad = new LinkedHashMap<String, LinkedHashMap>();
         viewReqItemAdapter = new ViewReqItemAdapter(activity, dataLoad);
@@ -103,6 +103,7 @@ public class MyDeliveriesActivity extends AppCompatActivity {
                         loadDataKeys = new ArrayList<>();
                         final long childLength = dataSnapshot.getChildrenCount();
                         loadDataInc = 0;
+                        int checkInt = 0;
                         for (final DataSnapshot child: dataSnapshot.getChildren()){
                             loadDataKeys.add(child.getKey());
                             completeRequests.child(child.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -184,7 +185,6 @@ public class MyDeliveriesActivity extends AppCompatActivity {
         itemData.put("status", status);
         dataLoad.put(snapshot.getKey(), itemData);
         viewReqItemAdapter.notifyDataSetChanged();
-        mRecyclerView.scrollToPosition(viewReqItemAdapter.getItemCount()-1);
         if(mRecyclerView.getVisibility() != View.VISIBLE){
             progressBar.setVisibility(View.GONE);
             mRecyclerView.setVisibility(View.VISIBLE);
@@ -194,6 +194,7 @@ public class MyDeliveriesActivity extends AppCompatActivity {
     private void finalLoadData(long childLength, int inc, List<String> dataKeys, JSONObject loadedData){
         if(childLength == inc){
             Collections.sort(dataKeys);
+            Collections.reverse(dataKeys);
             JSONObject item;
             for(int i=0; i<dataKeys.size(); i++){
                 try {

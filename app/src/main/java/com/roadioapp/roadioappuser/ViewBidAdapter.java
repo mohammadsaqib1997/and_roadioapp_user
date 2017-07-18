@@ -4,20 +4,29 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.roadioapp.roadioappuser.mInterfaces.ObjectInterfaces;
 import com.roadioapp.roadioappuser.mModels.UserActiveRequest;
 import com.roadioapp.roadioappuser.mObjects.ButtonEffects;
 import com.roadioapp.roadioappuser.mObjects.mProgressBar;
+import com.roadioapp.roadioappuser.transforms.CircleTransform;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,10 +38,12 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
 
     private String reqId;
     private mProgressBar mProgressBar;
+    private StorageReference mProfileImageRef;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView title, vehicle_type, bidAmount;
         public LinearLayout list_item;
+        public ImageView pro_img;
 
         public ViewHolder(View v) {
             super(v);
@@ -40,6 +51,7 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
             title = (TextView) v.findViewById(R.id.title);
             vehicle_type = (TextView) v.findViewById(R.id.vehicle_type);
             bidAmount = (TextView) v.findViewById(R.id.bidAmount);
+            pro_img = (ImageView) v.findViewById(R.id.pro_img);
         }
     }
 
@@ -52,12 +64,13 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
     @Override
     public ViewBidAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.bid_view_layout, parent, false);
+        mProfileImageRef = FirebaseStorage.getInstance().getReference().child("profile_images");
         ViewHolder viewHolder = new ViewHolder(v);
         return viewHolder;
     }
 
     @Override
-    public void onBindViewHolder(ViewBidAdapter.ViewHolder holder, final int position) {
+    public void onBindViewHolder(final ViewBidAdapter.ViewHolder holder, final int position) {
 
         final HashMap data = (new ArrayList<HashMap>(saveData.values())).get(position);
         holder.title.setText(""+data.get("username"));
@@ -68,6 +81,14 @@ public class ViewBidAdapter extends RecyclerView.Adapter<ViewBidAdapter.ViewHold
             @Override
             public void onClick(View v) {
                 confirmBidDialog(activity, data.get("id")+"", reqId);
+            }
+        });
+        mProfileImageRef.child(data.get("id")+".jpg").getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if(task.isSuccessful()){
+                    Picasso.with(activity).load(task.getResult()).placeholder(R.drawable.circle_img).transform(new CircleTransform()).into(holder.pro_img);
+                }
             }
         });
     }

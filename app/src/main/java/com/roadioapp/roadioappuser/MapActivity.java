@@ -191,8 +191,8 @@ public class MapActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        requestParcelObj.remLisCheckUserLiveReq();
         super.onDestroy();
-        Log.e("AppStatus", "App Terminated");
     }
 
     @Override

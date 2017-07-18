@@ -37,7 +37,8 @@ public class UserRequest {
 
     public long createdAt;
 
-    private DatabaseReference requestLiveCollection, requestActiveCollection, requestCollection;
+    private DatabaseReference requestLiveCollection, reqLiveColChildRef, requestActiveCollection, requestCollection;
+    private ValueEventListener reqLiveChildListener;
     private StorageReference parcelImagesRef, parcelImgThmbRef;
 
     private Activity activity;
@@ -155,7 +156,8 @@ public class UserRequest {
 
     public void userLiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
         if(authObj.isLoginUser()){
-            requestLiveCollection.child(authObj.authUid).addValueEventListener(new ValueEventListener() {
+            reqLiveColChildRef = requestLiveCollection.child(authObj.authUid);
+            reqLiveChildListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if(dataSnapshot.exists()){
@@ -169,11 +171,16 @@ public class UserRequest {
                 public void onCancelled(DatabaseError databaseError) {
                     callbacks.onSuccess(false, databaseError.getMessage());
                 }
-            });
+            };
+            reqLiveColChildRef.addValueEventListener(reqLiveChildListener);
 
         }else{
             callbacks.onSuccess(false, "Auth Not Found!");
         }
+    }
+
+    public void remLisUserLiveReqCheck(){
+        reqLiveColChildRef.removeEventListener(reqLiveChildListener);
     }
 
     public void userActiveRequestCheck(final ObjectInterfaces.SimpleCallback callbacks){
